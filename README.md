@@ -4,50 +4,6 @@ Frontend của dự án **MlogNRoll** – nền tảng chia sẻ blog / nội du
 
 ---
 
-## Cấu trúc thư mục dự án
-
-src/
-│
-├── app/ # Layer khởi tạo ứng dụng (root config)
-│ ├── App.tsx # Component gốc
-│ ├── main.tsx # Điểm mount ReactDOM
-│ └── router.tsx # Khai báo routing
-│
-├── pages/ # Các "trang" tương ứng với URL (route-level)
-│
-├── features/ # Tính năng (feature + UI + logic đi kèm)
-│ ├── editor/
-│ │ ├── EditorToolbar.tsx
-│ │ └── PublishModal.tsx
-│ ├── post/
-│ │ ├── AuthorRow.tsx
-│ │ ├── Comment.tsx
-│ │ └── CommentsPanel.tsx
-│ └── feed/
-│ └── PostCard.tsx
-│
-├── components/ # Component tái sử dụng không thuộc feature cụ thể
-│ ├── layout/ # Sidebar, Topbar, Wrapper layout
-│ │ ├── Sidebar.tsx
-│ │ └── Topbar.tsx
-│ └── common/
-│   └── ImageWithFallback.tsx
-│
-├── ui/ # Thư viện UI (Shadcn UI) – KHÔNG chỉnh sửa logic trong đây
-│
-├── lib/ # Helpers, types, mock data (không chứa UI)
-│ ├── mockData.ts
-│ └── types.ts
-│
-├── styles/ # CSS/Tailwind global
-│ ├── globals.css
-│ └── index.css
-│
-└── index.html
-
-
----
-
 ## Vai trò từng thư mục
 
 | Thư mục       | Chức năng                                              |
