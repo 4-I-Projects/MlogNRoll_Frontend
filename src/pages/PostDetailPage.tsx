@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Separator } from '../components/ui/separator';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Separator } from '../ui/separator';
 import { AuthorRow } from '../components/post/AuthorRow';
 import { CommentsPanel } from '../components/post/CommentsPanel';
 import { Post, Comment, User } from '../lib/types';

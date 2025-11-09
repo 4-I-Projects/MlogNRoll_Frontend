@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PostCard } from '../components/feed/PostCard';
-import { Skeleton } from '../components/ui/skeleton';
+import { Skeleton } from '../ui/skeleton';
 import { Post } from '../lib/types';
 import { mockPosts } from '../lib/mockData';
 

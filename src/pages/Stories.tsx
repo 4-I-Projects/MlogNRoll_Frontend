@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { FileText, Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
+} from '../ui/dropdown-menu';
 import { mockPosts } from '../lib/mockData';
 import { Post } from '../lib/types';
 

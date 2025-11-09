@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Save, Eye, MoreVertical } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 import { EditorToolbar } from '../components/editor/EditorToolbar';
 import { PublishModal, PublishSettings } from '../components/editor/PublishModal';
-import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
+} from '../ui/dropdown-menu';
 import { User } from '../lib/types';
 import { toast } from 'sonner';
 

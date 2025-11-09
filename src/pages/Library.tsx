@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Bookmark, Star, Clock } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { PostCard } from '../components/feed/PostCard';
 import { mockPosts } from '../lib/mockData';
 

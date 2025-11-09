@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Topbar } from './components/layout/Topbar';
-import { Sidebar } from './components/layout/Sidebar';
-import { Home } from './pages/Home';
-import { PostDetailPage } from './pages/PostDetailPage';
-import { EditorPage } from './pages/EditorPage';
-import { Library } from './pages/Library';
-import { Stories } from './pages/Stories';
-import { Profile } from './pages/Profile';
-import { Following } from './pages/Following';
-import { Settings } from './pages/Settings';
-import { Toaster } from './components/ui/sonner';
-import { Page } from './lib/types';
-import { currentUser, getUnreadNotificationsCount } from './lib/mockData';
+import { Topbar } from '../components/layout/Topbar';
+import { Sidebar } from '../components/layout/Sidebar';
+import { Home } from '../pages/Home';
+import { PostDetailPage } from '../pages/PostDetailPage';
+import { EditorPage } from '../pages/EditorPage';
+import { Library } from '../pages/Library';
+import { Stories } from '../pages/Stories';
+import { Profile } from '../pages/Profile';
+import { Following } from '../pages/Following';
+import { Settings } from '../pages/Settings';
+import { Toaster } from '../ui/sonner';
+import { Page } from '../lib/types';
+import { currentUser, getUnreadNotificationsCount } from '../lib/mockData';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');

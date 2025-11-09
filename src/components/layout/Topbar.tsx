@@ -1,16 +1,16 @@
 import { Search, Menu, Bell, PenSquare } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+} from '../../ui/dropdown-menu';
 import { User } from '../../lib/types';
-import { Badge } from '../ui/badge';
+import { Badge } from '../../ui/badge';
 
 interface TopbarProps {
   onToggleSidebar: () => void;

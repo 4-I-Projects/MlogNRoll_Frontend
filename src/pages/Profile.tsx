@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
-import { Button } from '../components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Button } from '../ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { PostCard } from '../components/feed/PostCard';
 import { User } from '../lib/types';
 import { mockPosts, mockUsers } from '../lib/mockData';

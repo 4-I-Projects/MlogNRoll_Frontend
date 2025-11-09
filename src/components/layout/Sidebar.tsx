@@ -1,9 +1,9 @@
 import { Home, Library, FileText, Users, Settings, Bookmark, Star, Clock } from 'lucide-react';
-import { cn } from '../ui/utils';
-import { Button } from '../ui/button';
-import { Sheet, SheetContent } from '../ui/sheet';
-import { ScrollArea } from '../ui/scroll-area';
-import { Separator } from '../ui/separator';
+import { cn } from '../../ui/utils';
+import { Button } from '../../ui/button';
+import { Sheet, SheetContent } from '../../ui/sheet';
+import { ScrollArea } from '../../ui/scroll-area';
+import { Separator } from '../../ui/separator';
 
 interface SidebarProps {
   visible: boolean;
