@@ -1,4 +1,4 @@
-import { Search, Menu, Bell, PenSquare } from 'lucide-react';
+import { Search, Menu, Bell, PenSquare, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
@@ -70,6 +70,26 @@ export function Topbar({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2"
+            onClick={() => onNavigate('login')}
+          >
+            <LogIn className="h-4 w-4" />
+            <span className="hidden sm:inline">Đăng nhập</span>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2"
+            onClick={() => onNavigate('register')}
+          >
+            <UserPlus className="h-4 w-4" />
+            <span className="hidden sm:inline">Đăng ký</span>
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"

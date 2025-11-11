@@ -61,7 +61,9 @@ export type Page =
   | 'stories' 
   | 'profile' 
   | 'following'
-  | 'settings';
+  | 'settings'
+  | 'login'
+  | 'register';
 
 export interface AppState {
   currentPage: Page;

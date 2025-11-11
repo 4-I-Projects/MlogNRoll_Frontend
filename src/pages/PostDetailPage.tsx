@@ -3,11 +3,11 @@ import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal } from 'lucide-r
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
-import { AuthorRow } from '../components/post/AuthorRow';
-import { CommentsPanel } from '../components/post/CommentsPanel';
+import { AuthorRow } from '../features/post/AuthorRow';
+import { CommentsPanel } from '../features/post/CommentsPanel';
 import { Post, Comment, User } from '../lib/types';
 import { getPostById, getCommentsByPostId, mockPosts } from '../lib/mockData';
-import { PostCard } from '../components/feed/PostCard';
+import { PostCard } from '../features/feed/PostCard';
 
 interface PostDetailPageProps {
   postId: string;

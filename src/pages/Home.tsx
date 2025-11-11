@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PostCard } from '../components/feed/PostCard';
+import { PostCard } from '../features/feed/PostCard';
 import { Skeleton } from '../ui/skeleton';
 import { Post } from '../lib/types';
 import { mockPosts } from '../lib/mockData';

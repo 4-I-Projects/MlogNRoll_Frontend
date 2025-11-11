@@ -9,6 +9,8 @@ import { Stories } from '../pages/Stories';
 import { Profile } from '../pages/Profile';
 import { Following } from '../pages/Following';
 import { Settings } from '../pages/Settings';
+import { Login } from '../pages/Login';
+import { Register } from '../pages/Register';
 import { Toaster } from '../ui/sonner';
 import { Page } from '../lib/types';
 import { currentUser, getUnreadNotificationsCount } from '../lib/mockData';
@@ -62,6 +64,25 @@ export default function App() {
     return (
       <>
         <EditorPage onNavigate={handleNavigate} currentUser={currentUser} />
+        <Toaster />
+      </>
+    );
+  }
+
+  // Login and Register pages have their own full-screen layout
+  if (currentPage === 'login') {
+    return (
+      <>
+        <Login onNavigate={handleNavigate} />
+        <Toaster />
+      </>
+    );
+  }
+
+  if (currentPage === 'register') {
+    return (
+      <>
+        <Register onNavigate={handleNavigate} />
         <Toaster />
       </>
     );

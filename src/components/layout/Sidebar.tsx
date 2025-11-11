@@ -1,4 +1,4 @@
-import { Home, Library, FileText, Users, Settings, Bookmark, Star, Clock } from 'lucide-react';
+import { Home, Library, FileText, Users, Settings, Bookmark, Star, Clock, LogIn, UserPlus } from 'lucide-react';
 import { cn } from '../../ui/utils';
 import { Button } from '../../ui/button';
 import { Sheet, SheetContent } from '../../ui/sheet';
@@ -93,6 +93,26 @@ function SidebarContent({ activeTab, onNavigate }: Pick<SidebarProps, 'activeTab
             )}
           </div>
         ))}
+        
+        <Separator className="my-4" />
+        
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3"
+          onClick={() => onNavigate('login')}
+        >
+          <LogIn className="h-5 w-5" />
+          <span>Đăng nhập</span>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3"
+          onClick={() => onNavigate('register')}
+        >
+          <UserPlus className="h-5 w-5" />
+          <span>Đăng ký</span>
+        </Button>
         
         <Separator className="my-4" />
         

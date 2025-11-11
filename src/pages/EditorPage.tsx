@@ -3,8 +3,8 @@ import { ArrowLeft, Save, Eye, MoreVertical } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { EditorToolbar } from '../components/editor/EditorToolbar';
-import { PublishModal, PublishSettings } from '../components/editor/PublishModal';
+import { EditorToolbar } from '../features/editor/EditorToolbar';
+import { PublishModal, PublishSettings } from '../features/editor/PublishModal';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
   DropdownMenu,
