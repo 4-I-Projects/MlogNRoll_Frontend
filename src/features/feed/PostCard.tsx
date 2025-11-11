@@ -1,9 +1,9 @@
 import { Heart, MessageCircle, Bookmark, MoreHorizontal } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
+import { Button } from '../../ui/button';
+import { Badge } from '../../ui/badge';
 import { Post } from '../../lib/types';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { ImageWithFallback } from '../../components/common/ImageWithFallback';
 
 interface PostCardProps {
   post: Post;

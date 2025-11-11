@@ -17,14 +17,14 @@ import {
   Heading2,
   Heading3,
 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Separator } from '../ui/separator';
+import { Button } from '../../ui/button';
+import { Separator } from '../../ui/separator';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '../ui/tooltip';
+} from '../../ui/tooltip';
 
 interface EditorToolbarProps {
   onAction: (action: string) => void;

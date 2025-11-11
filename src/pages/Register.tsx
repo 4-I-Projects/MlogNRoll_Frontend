@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -88,7 +88,7 @@ export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
                     message: 'Họ tên phải có ít nhất 2 ký tự',
                   },
                 }}
-                render={({ field }) => (
+                render={({ field }: { field: UseFormRegisterReturn }) => (
                   <FormItem>
                     <FormLabel className="text-black">Họ và tên</FormLabel>
                     <FormControl>
@@ -114,7 +114,7 @@ export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
                     message: 'Email không hợp lệ',
                   },
                 }}
-                render={({ field }) => (
+                render={({ field }: { field: UseFormRegisterReturn }) => (
                   <FormItem>
                     <FormLabel className="text-black">Email</FormLabel>
                     <FormControl>
@@ -140,7 +140,7 @@ export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
                     message: 'Mật khẩu phải có ít nhất 6 ký tự',
                   },
                 }}
-                render={({ field }) => (
+                render={({ field }: { field: UseFormRegisterReturn }) => (
                   <FormItem>
                     <FormLabel className="text-black">Mật khẩu</FormLabel>
                     <FormControl>
@@ -161,10 +161,10 @@ export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
                 name="confirmPassword"
                 rules={{
                   required: 'Vui lòng xác nhận mật khẩu',
-                  validate: (value) =>
+                  validate: (value: string) =>
                     value === password || 'Mật khẩu xác nhận không khớp',
                 }}
-                render={({ field }) => (
+                render={({ field }: { field: UseFormRegisterReturn }) => (
                   <FormItem>
                     <FormLabel className="text-black">Xác nhận mật khẩu</FormLabel>
                     <FormControl>

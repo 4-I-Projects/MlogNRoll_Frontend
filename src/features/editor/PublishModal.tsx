@@ -6,13 +6,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { Badge } from "../ui/badge";
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Textarea } from "../../ui/textarea";
+import { RadioGroup, RadioGroupItem } from "../../ui/radio-group";
+import { Badge } from "../../ui/badge";
 import { X } from "lucide-react";
 
 interface PublishModalProps {
@@ -95,7 +95,7 @@ export function PublishModal({
             <Label>Visibility</Label>
             <RadioGroup
               value={visibility}
-              onValueChange={(v) => setVisibility(v as any)}
+              onValueChange={(v: any) => setVisibility(v as any)}
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="public" id="public" />

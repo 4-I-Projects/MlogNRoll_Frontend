@@ -82,7 +82,7 @@ export function Login({ onNavigate, onLoginSuccess }: LoginProps) {
                     message: 'Email không hợp lệ',
                   },
                 }}
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel className="text-black">Email</FormLabel>
                     <FormControl>
@@ -108,7 +108,7 @@ export function Login({ onNavigate, onLoginSuccess }: LoginProps) {
                     message: 'Mật khẩu phải có ít nhất 6 ký tự',
                   },
                 }}
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel className="text-black">Mật khẩu</FormLabel>
                     <FormControl>
