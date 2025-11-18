@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { User } from '../lib/types';
+import { User } from '@/features/auth/types';
 import { toast } from 'sonner';
 
 interface EditorPageProps {

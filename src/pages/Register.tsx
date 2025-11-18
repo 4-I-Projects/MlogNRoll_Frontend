@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm, FieldValues } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';

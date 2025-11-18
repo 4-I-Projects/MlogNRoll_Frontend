@@ -3,10 +3,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
 import { Button } from '../../../ui/button';
 import { Textarea } from '../../../ui/textarea';
 import { Comment } from './Comment';
-import { Comment as CommentType, User } from '../../../lib/types';
+import { Comment as IComment } from '../types';
+import { User } from '@/features/auth/types';
+
 
 interface CommentsPanelProps {
-  comments: CommentType[];
+  comments: IComment[];
   currentUser: User;
   onAddComment: (content: string) => void;
   onReply: (commentId: string, content: string) => void;

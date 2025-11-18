@@ -1,4 +1,5 @@
-import { User, Post, Comment, Notification } from './types';
+import { User } from '@/features/auth/types';
+import { Post, Comment } from '@/features/post/types';
 
 export const mockUsers: User[] = [
   {

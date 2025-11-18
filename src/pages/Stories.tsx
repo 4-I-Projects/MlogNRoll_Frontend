@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { FileText, Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Button } from '../ui/button';
@@ -10,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { mockPosts } from '../lib/mockData';
-import { Post } from '../lib/types';
+import { Post } from '@/features/post/types';
 
 interface StoriesProps {
   onNavigate: (page: string, postId?: string) => void;

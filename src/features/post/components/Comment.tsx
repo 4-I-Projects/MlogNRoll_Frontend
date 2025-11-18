@@ -5,10 +5,10 @@ import { Button } from '../../../ui/button';
 import { Textarea } from '../../../ui/textarea';
 
 
-import type { CommentType } from '../types'; // Adjust the path if needed
+import { Comment as IComment } from '../types';
 
 interface CommentProps {
-  comment: CommentType;
+  comment: IComment;
   depth?: number;
   onReply?: (commentId: string, content: string) => void;
   onLike?: (commentId: string) => void;

@@ -1,26 +1,27 @@
 import { useState } from 'react';
 import { PostCard } from '../features/feed/PostCard';
 import { Skeleton } from '../ui/skeleton';
-import { Post } from '../lib/types';
+import { Post } from '@/features/post/types';
 import { mockPosts } from '../lib/mockData';
+import { useNavigate } from 'react-router-dom';
 
 interface HomeProps {
-  onNavigate: (page: string, postId?: string) => void;
   searchQuery: string;
 }
 
-export function Home({ onNavigate, searchQuery }: HomeProps) {
+export function Home({ searchQuery }: HomeProps) {
+  const navigate = useNavigate();
   const [posts] = useState<Post[]>(mockPosts);
   const [loading] = useState(false);
 
   // Filter posts based on search query
   const filteredPosts = searchQuery
     ? posts.filter(
-        (post) =>
-          post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
+      (post) =>
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
     : posts;
 
   if (loading) {
@@ -62,7 +63,7 @@ export function Home({ onNavigate, searchQuery }: HomeProps) {
         <PostCard
           key={post.id}
           post={post}
-          onClick={() => onNavigate('post-detail', post.id)}
+          onClick={() => navigate(`/post/${post.id}`)}
         />
       ))}
     </div>

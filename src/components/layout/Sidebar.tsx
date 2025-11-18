@@ -5,9 +5,10 @@ import { Sheet, SheetContent } from '../../ui/sheet';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Separator } from '../../ui/separator';
 
+import { useNavigate, useLocation } from 'react-router-dom';
+
 interface SidebarProps {
   visible: boolean;
-  activeTab: string;
   onNavigate: (page: string) => void;
   onClose: () => void;
   isMobile: boolean;
@@ -49,19 +50,30 @@ const navItems: NavItem[] = [
   },
 ];
 
-function SidebarContent({ activeTab, onNavigate }: Pick<SidebarProps, 'activeTab' | 'onNavigate'>) {
+function SidebarContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Logic xác định activeTab dựa trên URL hiện tại
+  const currentPath = location.pathname === '/' ? 'home' : location.pathname.substring(1);
+
+  // Hàm xử lý click chung
+  const handleNavigate = (path: string) => {
+    const targetPath = path === 'home' ? '/' : `/${path}`;
+    navigate(targetPath);
+  };
   return (
     <ScrollArea className="h-full py-6">
       <div className="space-y-1 px-3">
         {navItems.map((item) => (
           <div key={item.id}>
             <Button
-              variant={activeTab === item.id ? 'secondary' : 'ghost'}
+              variant={currentPath === item.id ? 'secondary' : 'ghost'}
               className={cn(
                 'w-full justify-start gap-3',
-                activeTab === item.id && 'bg-gray-100'
+                currentPath === item.id && 'bg-gray-100'
               )}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => handleNavigate(item.id)}
             >
               {item.icon}
               <span>{item.label}</span>
@@ -71,19 +83,19 @@ function SidebarContent({ activeTab, onNavigate }: Pick<SidebarProps, 'activeTab
                 </span>
               )}
             </Button>
-            
-            {item.children && activeTab.startsWith(item.id) && (
+
+            {item.children && currentPath.startsWith(item.id) && (
               <div className="ml-4 mt-1 space-y-1">
                 {item.children.map((child) => (
                   <Button
                     key={child.id}
-                    variant={activeTab === child.id ? 'secondary' : 'ghost'}
+                    variant={currentPath === child.id ? 'secondary' : 'ghost'}
                     size="sm"
                     className={cn(
                       'w-full justify-start gap-2 pl-8',
-                      activeTab === child.id && 'bg-gray-100'
+                      currentPath === child.id && 'bg-gray-100'
                     )}
-                    onClick={() => onNavigate(child.id)}
+                    onClick={() => handleNavigate(child.id)}
                   >
                     {child.icon}
                     <span>{child.label}</span>
@@ -93,33 +105,33 @@ function SidebarContent({ activeTab, onNavigate }: Pick<SidebarProps, 'activeTab
             )}
           </div>
         ))}
-        
+
         <Separator className="my-4" />
-        
+
         <Button
           variant="ghost"
           className="w-full justify-start gap-3"
-          onClick={() => onNavigate('login')}
+          onClick={() => handleNavigate('login')}
         >
           <LogIn className="h-5 w-5" />
           <span>Đăng nhập</span>
         </Button>
-        
+
         <Button
           variant="ghost"
           className="w-full justify-start gap-3"
-          onClick={() => onNavigate('register')}
+          onClick={() => handleNavigate('register')}
         >
           <UserPlus className="h-5 w-5" />
           <span>Đăng ký</span>
         </Button>
-        
+
         <Separator className="my-4" />
-        
+
         <Button
           variant="ghost"
           className="w-full justify-start gap-3"
-          onClick={() => onNavigate('settings')}
+          onClick={() => handleNavigate('settings')}
         >
           <Settings className="h-5 w-5" />
           <span>Settings</span>
@@ -129,12 +141,12 @@ function SidebarContent({ activeTab, onNavigate }: Pick<SidebarProps, 'activeTab
   );
 }
 
-export function Sidebar({ visible, activeTab, onNavigate, onClose, isMobile }: SidebarProps) {
+export function Sidebar({ visible, onClose, isMobile }: SidebarProps) {
   if (isMobile) {
     return (
       <Sheet open={visible} onOpenChange={onClose}>
         <SheetContent side="left" className="w-64 p-0">
-          <SidebarContent activeTab={activeTab} onNavigate={onNavigate} />
+          <SidebarContent />
         </SheetContent>
       </Sheet>
     );
@@ -144,7 +156,7 @@ export function Sidebar({ visible, activeTab, onNavigate, onClose, isMobile }: S
 
   return (
     <aside className="hidden lg:block w-64 border-r bg-white">
-      <SidebarContent activeTab={activeTab} onNavigate={onNavigate} />
+      <SidebarContent />
     </aside>
   );
 }

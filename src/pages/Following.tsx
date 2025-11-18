@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { mockUsers } from '../lib/mockData';
-import { User } from '../lib/types';
+import { User } from '@/features/auth/types';
 
 interface FollowingProps {
   onNavigate: (page: string, userId?: string) => void;

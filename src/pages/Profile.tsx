@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { PostCard } from '../features/feed/PostCard';
-import { User } from '../lib/types';
+import { User } from '@/features/auth/types';
 import { mockPosts, mockUsers } from '../lib/mockData';
 
 interface ProfileProps {

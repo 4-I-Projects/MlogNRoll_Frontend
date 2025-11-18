@@ -5,7 +5,7 @@ import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { User } from '../lib/types';
+import { User } from '@/features/auth/types';
 import { Separator } from '../ui/separator';
 
 interface SettingsProps {
