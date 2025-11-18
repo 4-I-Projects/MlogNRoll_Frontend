@@ -9,12 +9,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu';
-import { User } from '../../features/auth/types';
+import { User } from '@/features/auth/types';
 import { Badge } from '../../ui/badge';
+import { useNavigate } from 'react-router-dom';
 
 interface TopbarProps {
   onToggleSidebar: () => void;
-  onNavigate: (page: string) => void;
   user: User;
   notificationsCount: number;
   searchQuery: string;
@@ -23,16 +23,16 @@ interface TopbarProps {
 
 export function Topbar({ 
   onToggleSidebar, 
-  onNavigate, 
   user, 
   notificationsCount,
   searchQuery,
   onSearchChange,
 }: TopbarProps) {
+  const navigate = useNavigate();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="flex h-16 items-center gap-4 px-4 md:px-6">
-        {/* Left: Menu + Logo */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -44,7 +44,7 @@ export function Topbar({
           </Button>
           
           <button 
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
@@ -54,7 +54,6 @@ export function Topbar({
           </button>
         </div>
 
-        {/* Center: Search */}
         <div className="flex-1 max-w-md mx-auto">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -68,13 +67,12 @@ export function Topbar({
           </div>
         </div>
 
-        {/* Right: Actions */}
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
             className="gap-2"
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
           >
             <LogIn className="h-4 w-4" />
             <span className="hidden sm:inline">Đăng nhập</span>
@@ -84,7 +82,7 @@ export function Topbar({
             variant="ghost"
             size="sm"
             className="gap-2"
-            onClick={() => onNavigate('register')}
+            onClick={() => navigate('/register')}
           >
             <UserPlus className="h-4 w-4" />
             <span className="hidden sm:inline">Đăng ký</span>
@@ -94,7 +92,7 @@ export function Topbar({
             variant="ghost"
             size="sm"
             className="gap-2"
-            onClick={() => onNavigate('editor')}
+            onClick={() => navigate('/editor')}
           >
             <PenSquare className="h-4 w-4" />
             <span className="hidden sm:inline">Write</span>
@@ -104,7 +102,7 @@ export function Topbar({
             variant="ghost"
             size="icon"
             className="relative"
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/')}
           >
             <Bell className="h-5 w-5" />
             {notificationsCount > 0 && (
@@ -127,17 +125,17 @@ export function Topbar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => onNavigate('profile')}>
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onNavigate('library')}>
+              <DropdownMenuItem onClick={() => navigate('/library')}>
                 Library
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onNavigate('stories')}>
+              <DropdownMenuItem onClick={() => navigate('/stories')}>
                 Stories
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onNavigate('settings')}>
+              <DropdownMenuItem onClick={() => navigate('/settings')}>
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem>Sign out</DropdownMenuItem>

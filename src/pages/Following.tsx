@@ -1,14 +1,13 @@
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Button } from '../ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { mockUsers } from '../lib/mockData';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
+import { Button } from '@/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
+import { mockUsers } from '@/lib/mockData';
 import { User } from '@/features/auth/types';
+import { useNavigate } from 'react-router-dom'; // [MỚI]
 
-interface FollowingProps {
-  onNavigate: (page: string, userId?: string) => void;
-}
+// [XÓA] interface FollowingProps
 
-export function Following({ onNavigate }: FollowingProps) {
+export function Following() {
   const followingUsers = mockUsers.filter(u => u.isFollowing);
   const suggestedUsers = mockUsers.filter(u => !u.isFollowing);
 
@@ -23,25 +22,15 @@ export function Following({ onNavigate }: FollowingProps) {
 
       <Tabs defaultValue="following" className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="following">
-            Following ({followingUsers.length})
-          </TabsTrigger>
-          <TabsTrigger value="followers">
-            Followers (123)
-          </TabsTrigger>
-          <TabsTrigger value="suggested">
-            Suggested
-          </TabsTrigger>
+          <TabsTrigger value="following">Following ({followingUsers.length})</TabsTrigger>
+          <TabsTrigger value="followers">Followers (123)</TabsTrigger>
+          <TabsTrigger value="suggested">Suggested</TabsTrigger>
         </TabsList>
 
         <TabsContent value="following">
           <div className="grid gap-6 md:grid-cols-2">
             {followingUsers.map((user) => (
-              <UserCard
-                key={user.id}
-                user={user}
-                onNavigate={onNavigate}
-              />
+              <UserCard key={user.id} user={user} />
             ))}
           </div>
         </TabsContent>
@@ -49,11 +38,7 @@ export function Following({ onNavigate }: FollowingProps) {
         <TabsContent value="followers">
           <div className="grid gap-6 md:grid-cols-2">
             {mockUsers.slice(0, 3).map((user) => (
-              <UserCard
-                key={user.id}
-                user={user}
-                onNavigate={onNavigate}
-              />
+              <UserCard key={user.id} user={user} />
             ))}
           </div>
         </TabsContent>
@@ -61,11 +46,7 @@ export function Following({ onNavigate }: FollowingProps) {
         <TabsContent value="suggested">
           <div className="grid gap-6 md:grid-cols-2">
             {suggestedUsers.map((user) => (
-              <UserCard
-                key={user.id}
-                user={user}
-                onNavigate={onNavigate}
-              />
+              <UserCard key={user.id} user={user} />
             ))}
           </div>
         </TabsContent>
@@ -74,10 +55,13 @@ export function Following({ onNavigate }: FollowingProps) {
   );
 }
 
-function UserCard({ user, onNavigate }: { user: User; onNavigate: (page: string, userId?: string) => void }) {
+// [SỬA] Component UserCard tự dùng hook
+function UserCard({ user }: { user: User }) {
+  const navigate = useNavigate(); // [MỚI]
+  
   return (
     <div className="flex gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-      <Avatar className="h-16 w-16 flex-shrink-0 cursor-pointer" onClick={() => onNavigate('profile', user.id)}>
+      <Avatar className="h-16 w-16 flex-shrink-0 cursor-pointer" onClick={() => navigate(`/profile/${user.id}`)}>
         <AvatarImage src={user.avatar} alt={user.name} />
         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
       </Avatar>
@@ -85,7 +69,7 @@ function UserCard({ user, onNavigate }: { user: User; onNavigate: (page: string,
       <div className="flex-1 min-w-0">
         <h3 
           className="mb-1 cursor-pointer hover:underline" 
-          onClick={() => onNavigate('profile', user.id)}
+          onClick={() => navigate(`/profile/${user.id}`)}
         >
           {user.name}
         </h3>

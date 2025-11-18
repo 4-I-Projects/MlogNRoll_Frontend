@@ -4,12 +4,10 @@ import { Button } from '../../ui/button';
 import { Sheet, SheetContent } from '../../ui/sheet';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Separator } from '../../ui/separator';
-
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
   visible: boolean;
-  onNavigate: (page: string) => void;
   onClose: () => void;
   isMobile: boolean;
 }
@@ -54,24 +52,23 @@ function SidebarContent() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Logic xác định activeTab dựa trên URL hiện tại
   const currentPath = location.pathname === '/' ? 'home' : location.pathname.substring(1);
 
-  // Hàm xử lý click chung
   const handleNavigate = (path: string) => {
     const targetPath = path === 'home' ? '/' : `/${path}`;
     navigate(targetPath);
   };
+
   return (
     <ScrollArea className="h-full py-6">
       <div className="space-y-1 px-3">
         {navItems.map((item) => (
           <div key={item.id}>
             <Button
-              variant={currentPath === item.id ? 'secondary' : 'ghost'}
+              variant={currentPath.startsWith(item.id) || (item.id === 'home' && currentPath === 'home') ? 'secondary' : 'ghost'}
               className={cn(
                 'w-full justify-start gap-3',
-                currentPath === item.id && 'bg-gray-100'
+                (currentPath.startsWith(item.id) || (item.id === 'home' && currentPath === 'home')) && 'bg-gray-100'
               )}
               onClick={() => handleNavigate(item.id)}
             >
@@ -83,7 +80,7 @@ function SidebarContent() {
                 </span>
               )}
             </Button>
-
+            
             {item.children && currentPath.startsWith(item.id) && (
               <div className="ml-4 mt-1 space-y-1">
                 {item.children.map((child) => (
@@ -95,7 +92,7 @@ function SidebarContent() {
                       'w-full justify-start gap-2 pl-8',
                       currentPath === child.id && 'bg-gray-100'
                     )}
-                    onClick={() => handleNavigate(child.id)}
+                    onClick={() => navigate('/library')} // Ví dụ chuyển tab trong library
                   >
                     {child.icon}
                     <span>{child.label}</span>
@@ -105,33 +102,33 @@ function SidebarContent() {
             )}
           </div>
         ))}
-
+        
         <Separator className="my-4" />
-
+        
         <Button
           variant="ghost"
           className="w-full justify-start gap-3"
-          onClick={() => handleNavigate('login')}
+          onClick={() => navigate('/login')}
         >
           <LogIn className="h-5 w-5" />
           <span>Đăng nhập</span>
         </Button>
-
+        
         <Button
           variant="ghost"
           className="w-full justify-start gap-3"
-          onClick={() => handleNavigate('register')}
+          onClick={() => navigate('/register')}
         >
           <UserPlus className="h-5 w-5" />
           <span>Đăng ký</span>
         </Button>
-
+        
         <Separator className="my-4" />
-
+        
         <Button
           variant="ghost"
           className="w-full justify-start gap-3"
-          onClick={() => handleNavigate('settings')}
+          onClick={() => navigate('/settings')}
         >
           <Settings className="h-5 w-5" />
           <span>Settings</span>

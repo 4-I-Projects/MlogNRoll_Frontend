@@ -230,34 +230,34 @@ export const mockComments: Comment[] = [
   },
 ];
 
-export const mockNotifications: Notification[] = [
-  {
-    id: 'n1',
-    type: 'like',
-    message: 'Sarah Chen liked your post "Building Scalable React Applications"',
-    read: false,
-    date: '2025-11-08T08:30:00Z',
-    userId: '1',
-    postId: '3',
-  },
-  {
-    id: 'n2',
-    type: 'comment',
-    message: 'Alex Rivera commented on your post',
-    read: false,
-    date: '2025-11-08T07:15:00Z',
-    userId: '2',
-    postId: '1',
-  },
-  {
-    id: 'n3',
-    type: 'follow',
-    message: 'Emma Thompson started following you',
-    read: true,
-    date: '2025-11-07T18:45:00Z',
-    userId: '4',
-  },
-];
+// export const mockNotifications: Notification[] = [
+//   {
+//     id: 'n1',
+//     type: 'like',
+//     message: 'Sarah Chen liked your post "Building Scalable React Applications"',
+//     read: false,
+//     date: '2025-11-08T08:30:00Z',
+//     userId: '1',
+//     postId: '3',
+//   },
+//   {
+//     id: 'n2',
+//     type: 'comment',
+//     message: 'Alex Rivera commented on your post',
+//     read: false,
+//     date: '2025-11-08T07:15:00Z',
+//     userId: '2',
+//     postId: '1',
+//   },
+//   {
+//     id: 'n3',
+//     type: 'follow',
+//     message: 'Emma Thompson started following you',
+//     read: true,
+//     date: '2025-11-07T18:45:00Z',
+//     userId: '4',
+//   },
+// ];
 
 // Helper functions
 export function getPostById(id: string): Post | undefined {
@@ -276,6 +276,6 @@ export function getPostsByAuthor(authorId: string): Post[] {
   return mockPosts.filter(post => post.authorId === authorId);
 }
 
-export function getUnreadNotificationsCount(): number {
-  return mockNotifications.filter(n => !n.read).length;
-}
+// export function getUnreadNotificationsCount(): number {
+//   return mockNotifications.filter(n => !n.read).length;
+// }

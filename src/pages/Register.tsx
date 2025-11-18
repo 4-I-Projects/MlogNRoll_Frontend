@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/ui/button';
+import { Input } from '@/ui/input';
+import { Label } from '@/ui/label';
 import {
   Form,
   FormControl,
@@ -10,14 +11,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../ui/form';
+} from '@/ui/form';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../ui/card';
+} from '@/ui/card';
 
 interface RegisterFormData {
   name: string;
@@ -26,13 +27,10 @@ interface RegisterFormData {
   confirmPassword: string;
 }
 
-interface RegisterProps {
-  onNavigate: (page: string) => void;
-  onRegisterSuccess?: () => void;
-}
-
-export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
+export function Register() {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  
   const form = useForm<RegisterFormData>({
     defaultValues: {
       name: '',
@@ -48,13 +46,9 @@ export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       console.log('Register data:', data);
-      // Call success callback if provided
-      if (onRegisterSuccess) {
-        onRegisterSuccess();
-      } else {
-        // Default: navigate to home
-        onNavigate('home');
-      }
+      
+      // Chuyển hướng về trang chủ hoặc trang login
+      navigate('/'); 
     } catch (error) {
       console.error('Register error:', error);
     } finally {
@@ -88,12 +82,12 @@ export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
                     message: 'Họ tên phải có ít nhất 2 ký tự',
                   },
                 }}
+                // [FIX LỖI] Bỏ khai báo type tường minh, để TS tự infer
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-black">Họ và tên</FormLabel>
                     <FormControl>
                       <Input
-                        type="text"
                         placeholder="Nguyễn Văn A"
                         className="bg-white border-[#D4A574] text-black placeholder:text-black/50 focus-visible:border-[#C49564] focus-visible:ring-[#C49564]/20"
                         {...field}
@@ -219,7 +213,7 @@ export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
                 Đã có tài khoản?{' '}
                 <button
                   type="button"
-                  onClick={() => onNavigate('login')}
+                  onClick={() => navigate('/login')}
                   className="text-[#C49564] hover:text-[#B48554] font-medium underline"
                 >
                   Đăng nhập ngay
@@ -232,4 +226,3 @@ export function Register({ onNavigate, onRegisterSuccess }: RegisterProps) {
     </div>
   );
 }
-

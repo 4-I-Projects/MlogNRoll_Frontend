@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Bookmark, Star, Clock } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { PostCard } from '../features/feed/PostCard';
-import { mockPosts } from '../lib/mockData';
+import { useNavigate } from 'react-router-dom'; // [MỚI]
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
+import { PostCard } from '@/features/feed/PostCard';
+import { mockPosts } from '@/lib/mockData';
 
-interface LibraryProps {
-  onNavigate: (page: string, postId?: string) => void;
-}
+// [XÓA] interface LibraryProps cũ
 
-export function Library({ onNavigate }: LibraryProps) {
+export function Library() {
+  const navigate = useNavigate(); // [MỚI]
+  
   // Mock saved posts (first 2 posts)
   const savedPosts = mockPosts.slice(0, 2);
   const favoritePosts = mockPosts.slice(1, 3);
@@ -46,7 +47,7 @@ export function Library({ onNavigate }: LibraryProps) {
                 <PostCard
                   key={post.id}
                   post={post}
-                  onClick={() => onNavigate('post-detail', post.id)}
+                  onClick={() => navigate(`/post/${post.id}`)} // [SỬA]
                 />
               ))}
             </div>
@@ -66,7 +67,7 @@ export function Library({ onNavigate }: LibraryProps) {
                 <PostCard
                   key={post.id}
                   post={post}
-                  onClick={() => onNavigate('post-detail', post.id)}
+                  onClick={() => navigate(`/post/${post.id}`)} // [SỬA]
                 />
               ))}
             </div>
@@ -86,7 +87,7 @@ export function Library({ onNavigate }: LibraryProps) {
                 <PostCard
                   key={post.id}
                   post={post}
-                  onClick={() => onNavigate('post-detail', post.id)}
+                  onClick={() => navigate(`/post/${post.id}`)} // [SỬA]
                 />
               ))}
             </div>

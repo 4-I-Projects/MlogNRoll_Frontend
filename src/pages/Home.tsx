@@ -3,14 +3,15 @@ import { PostCard } from '../features/feed/PostCard';
 import { Skeleton } from '../ui/skeleton';
 import { Post } from '@/features/post/types';
 import { mockPosts } from '../lib/mockData';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
-interface HomeProps {
+interface HomeContext {
   searchQuery: string;
 }
 
-export function Home({ searchQuery }: HomeProps) {
+export function Home() {
   const navigate = useNavigate();
+  const { searchQuery } = useOutletContext<HomeContext>();
   const [posts] = useState<Post[]>(mockPosts);
   const [loading] = useState(false);
 

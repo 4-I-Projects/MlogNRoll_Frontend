@@ -1,17 +1,18 @@
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Button } from '../ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { PostCard } from '../features/feed/PostCard';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
+import { Button } from '@/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
+import { PostCard } from '@/features/feed/PostCard';
 import { User } from '@/features/auth/types';
-import { mockPosts, mockUsers } from '../lib/mockData';
+import { mockPosts, mockUsers } from '@/lib/mockData';
+import { useNavigate, useParams } from 'react-router-dom'; // [MỚI]
 
-interface ProfileProps {
-  onNavigate: (page: string, postId?: string) => void;
-  userId?: string;
-}
+// [XÓA] interface ProfileProps
 
-export function Profile({ onNavigate, userId }: ProfileProps) {
-  // For demo, show first user's profile
+export function Profile() {
+  const navigate = useNavigate(); // [MỚI]
+  const { userId } = useParams(); // [MỚI]
+
+  // Logic lấy user: nếu có userId trên URL thì tìm, không thì lấy user mặc định (mockUsers[0])
   const user: User = userId ? mockUsers.find(u => u.id === userId) || mockUsers[0] : mockUsers[0];
   const userPosts = mockPosts.filter(post => post.authorId === user.id);
   
@@ -48,7 +49,7 @@ export function Profile({ onNavigate, userId }: ProfileProps) {
               <Button variant={user.isFollowing ? 'outline' : 'default'}>
                 {user.isFollowing ? 'Following' : 'Follow'}
               </Button>
-              <Button variant="outline" onClick={() => onNavigate('settings')}>
+              <Button variant="outline" onClick={() => navigate('/settings')}>
                 Edit Profile
               </Button>
             </div>
@@ -70,7 +71,7 @@ export function Profile({ onNavigate, userId }: ProfileProps) {
                 <PostCard
                   key={post.id}
                   post={post}
-                  onClick={() => onNavigate('post-detail', post.id)}
+                  onClick={() => navigate(`/post/${post.id}`)} // [SỬA]
                 />
               ))}
             </div>
@@ -81,8 +82,10 @@ export function Profile({ onNavigate, userId }: ProfileProps) {
           )}
         </TabsContent>
 
+        {/* TabsContent value="about" giữ nguyên */}
         <TabsContent value="about">
-          <div className="max-w-2xl">
+             {/* ... Code cũ giữ nguyên ... */}
+              <div className="max-w-2xl">
             <h3 className="mb-4">About {user.name}</h3>
             <p className="text-gray-600 mb-6">{user.bio}</p>
 
