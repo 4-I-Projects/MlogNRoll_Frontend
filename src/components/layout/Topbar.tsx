@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu';
-import { User } from '../../lib/types';
+import { User } from '../../features/auth/types';
 import { Badge } from '../../ui/badge';
 
 interface TopbarProps {
