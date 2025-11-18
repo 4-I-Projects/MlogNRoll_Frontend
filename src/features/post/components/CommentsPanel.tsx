@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { Button } from '../../ui/button';
-import { Textarea } from '../../ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
+import { Button } from '../../../ui/button';
+import { Textarea } from '../../../ui/textarea';
 import { Comment } from './Comment';
-import { Comment as CommentType, User } from '../../lib/types';
+import { Comment as CommentType, User } from '../../../lib/types';
 
 interface CommentsPanelProps {
   comments: CommentType[];

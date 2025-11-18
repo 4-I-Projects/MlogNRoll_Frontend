@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { Button } from '../../ui/button';
-import { Textarea } from '../../ui/textarea';
-import { Comment as CommentType } from '../../lib/types';
+import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
+import { Button } from '../../../ui/button';
+import { Textarea } from '../../../ui/textarea';
+import { Comment as CommentType } from '../../../lib/types';
 
 interface CommentProps {
   comment: CommentType;

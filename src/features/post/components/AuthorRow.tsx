@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { Button } from '../../ui/button';
-import { User } from '../../lib/types';
+import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
+import { Button } from '../../../ui/button';
+import { User } from '../../../lib/types';
 
 interface AuthorRowProps {
   author: User;

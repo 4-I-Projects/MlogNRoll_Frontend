@@ -6,13 +6,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Label } from "../../ui/label";
-import { Textarea } from "../../ui/textarea";
-import { RadioGroup, RadioGroupItem } from "../../ui/radio-group";
-import { Badge } from "../../ui/badge";
+} from "../../../ui/dialog";
+import { Button } from "../../../ui/button";
+import { Input } from "../../../ui/input";
+import { Label } from "../../../ui/label";
+import { Textarea } from "../../../ui/textarea";
+import { RadioGroup, RadioGroupItem } from "../../../ui/radio-group";
+import { Badge } from "../../../ui/badge";
 import { X } from "lucide-react";
 
 interface PublishModalProps {
