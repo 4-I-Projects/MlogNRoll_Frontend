@@ -1,0 +1,66 @@
+
+/* ==== GLOBAL ==== */
+/* body {
+    background: #F4EDE3 !important;
+    font-family: 'Inter', sans-serif;
+    color: #000;
+} */
+
+/* ==== LOGIN CARD ==== */
+/* .login-pf-page .card-pf {
+    background: #FFFFFF;
+    border-radius: 14px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: none;
+} */
+
+/* ==== INPUT ==== */
+/* .form-control {
+    border-radius: 10px;
+    border: 1px solid #D7C5AE;
+    padding: 12px;
+    font-size: 14px;
+} */
+
+/* .form-control:focus {
+    border-color: #5C4631;
+    box-shadow: 0 0 0 2px rgba(92,70,49,0.2);
+} */
+
+/* ==== BUTTON ==== */
+/* .btn-primary {
+    background: #5C4631 !important;
+    border: none;
+    border-radius: 10px !important;
+    padding: 12px;
+    font-size: 15px;
+} */
+
+/* .btn-primary:hover {
+    background: #7A5C40 !important;
+} */
+
+/* ==== LINKS ==== */
+/* .login-pf-page a {
+    color: #5C4631 !important;
+    font-weight: 500;
+} */
+
+/* ==== HEADER TEXT ==== */
+/* .login-pf-header h1 {
+    font-size: 26px;
+    font-weight: 600;
+    color: #000;
+} */
+
+/* .login-pf-header p {
+    font-size: 14px;
+    color: #7A7A7A;
+} */
+
+/* ==== LOGO ==== */
+/* #kc-logo-wrapper img {
+    max-width: 140px;
+    margin-bottom: 20px;
+}    */
