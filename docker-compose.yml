@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: mlog_keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak-theme/my-theme:/opt/keycloak/themes/mlog-theme
+    # SỬA DÒNG NÀY:
+    command: start-dev --theme-static-max-age=-1 --cache-templates=false --cache-themes=false
