@@ -2,22 +2,39 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import { Button } from '@/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
 import { PostCard } from '@/features/feed/PostCard';
+import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { User } from '@/features/auth/types';
-import { mockPosts, mockUsers } from '@/lib/mockData';
-import { useNavigate, useParams } from 'react-router-dom'; // [MỚI]
 
-// [XÓA] interface ProfileProps
+// [MỚI] Imports hooks
+import { useUser } from '@/features/auth/api/get-user';
+import { usePosts } from '@/features/post/api/get-posts';
 
 export function Profile() {
-  const navigate = useNavigate(); // [MỚI]
-  const { userId } = useParams(); // [MỚI]
-
-  // Logic lấy user: nếu có userId trên URL thì tìm, không thì lấy user mặc định (mockUsers[0])
-  const user: User = userId ? mockUsers.find(u => u.id === userId) || mockUsers[0] : mockUsers[0];
-  const userPosts = mockPosts.filter(post => post.authorId === user.id);
+  const navigate = useNavigate();
+  const { userId } = useParams(); 
   
+  // Lấy currentUser từ context (AppLayout truyền xuống) nếu đang xem profile chính mình
+  const { currentUser } = useOutletContext<{ currentUser: User }>();
+
+  // Xác định ID cần fetch: nếu không có userId trên URL -> xem profile chính mình
+  const targetId = userId || currentUser.id;
+
+  // 1. Fetch User Info
+  const { data: user, isLoading: isLoadingUser } = useUser(targetId);
+
+  // 2. Fetch User Posts
+  const { data: userPosts, isLoading: isLoadingPosts } = usePosts({ 
+    authorId: targetId,
+    status: 'published' // Chỉ lấy bài đã public
+  });
+
+  if (isLoadingUser) return <div className="text-center py-20">Loading profile...</div>;
+
+  // Nếu không tìm thấy user hoặc lỗi
+  if (!user) return <div className="text-center py-20">User not found</div>;
+
   const stats = [
-    { label: 'Stories', value: userPosts.length },
+    { label: 'Stories', value: userPosts?.length || 0 },
     { label: 'Followers', value: user.followersCount },
     { label: 'Following', value: user.followingCount },
   ];
@@ -33,25 +50,29 @@ export function Profile() {
           </Avatar>
 
           <div className="flex-1">
-            <h1 className="mb-2">{user.name}</h1>
-            <p className="text-gray-600 mb-4">{user.bio}</p>
+            <h1 className="mb-2 text-2xl font-bold">{user.name}</h1>
+            <p className="text-gray-600 mb-4">{user.bio || "No bio yet."}</p>
 
             <div className="flex items-center gap-6 mb-4">
               {stats.map((stat) => (
                 <div key={stat.label}>
-                  <div className="text-gray-600">{stat.value}</div>
+                  <div className="text-gray-900 font-semibold">{stat.value}</div>
                   <div className="text-sm text-gray-500">{stat.label}</div>
                 </div>
               ))}
             </div>
 
             <div className="flex gap-2">
-              <Button variant={user.isFollowing ? 'outline' : 'default'}>
-                {user.isFollowing ? 'Following' : 'Follow'}
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/settings')}>
-                Edit Profile
-              </Button>
+              {/* Nếu là profile của chính mình thì hiện nút Edit, ngược lại hiện nút Follow */}
+              {currentUser.id === user.id ? (
+                <Button variant="outline" onClick={() => navigate('/settings')}>
+                  Edit Profile
+                </Button>
+              ) : (
+                <Button variant={user.isFollowing ? 'outline' : 'default'}>
+                  {user.isFollowing ? 'Following' : 'Follow'}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -65,13 +86,15 @@ export function Profile() {
         </TabsList>
 
         <TabsContent value="stories">
-          {userPosts.length > 0 ? (
+          {isLoadingPosts ? (
+            <div className="py-10 text-center">Loading stories...</div>
+          ) : userPosts && userPosts.length > 0 ? (
             <div>
               {userPosts.map((post) => (
                 <PostCard
                   key={post.id}
                   post={post}
-                  onClick={() => navigate(`/post/${post.id}`)} // [SỬA]
+                  onClick={() => navigate(`/post/${post.id}`)}
                 />
               ))}
             </div>
@@ -82,31 +105,11 @@ export function Profile() {
           )}
         </TabsContent>
 
-        {/* TabsContent value="about" giữ nguyên */}
         <TabsContent value="about">
-             {/* ... Code cũ giữ nguyên ... */}
-              <div className="max-w-2xl">
-            <h3 className="mb-4">About {user.name}</h3>
+          <div className="max-w-2xl">
+            <h3 className="mb-4 font-semibold">About {user.name}</h3>
             <p className="text-gray-600 mb-6">{user.bio}</p>
-
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm text-gray-500 mb-1">Member since</div>
-                <div>January 2024</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500 mb-1">Location</div>
-                <div>San Francisco, CA</div>
-              </div>
-
-              <div>
-                <div className="text-sm text-gray-500 mb-1">Website</div>
-                <a href="#" className="text-blue-600 hover:underline">
-                  example.com
-                </a>
-              </div>
-            </div>
+            {/* Các thông tin khác nếu API trả về... */}
           </div>
         </TabsContent>
       </Tabs>

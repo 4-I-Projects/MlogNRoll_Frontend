@@ -1,43 +1,37 @@
 import { FileText, Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // [MỚI]
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
 import { Button } from '@/ui/button';
 import { Badge } from '@/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/ui/dropdown-menu';
-import { mockPosts } from '@/lib/mockData';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/ui/dropdown-menu';
 import { Post } from '@/features/post/types';
+import { User } from '@/features/auth/types';
 
-// [XÓA] interface StoriesProps
+// [MỚI] Hooks
+import { usePosts } from '@/features/post/api/get-posts';
 
 export function Stories() {
-  const navigate = useNavigate(); // [MỚI]
+  const navigate = useNavigate();
+  const { currentUser } = useOutletContext<{ currentUser: User }>();
 
-  const publishedStories = mockPosts.slice(0, 2);
-  const draftStories: Post[] = [
-    {
-      ...mockPosts[0],
-      id: 'draft-1',
-      title: 'Understanding React Server Components',
-      status: 'draft',
-      datePublished: '2025-11-08',
-      stats: { likes: 0, comments: 0, views: 0 },
-    },
-  ];
-  const unlistedStories: Post[] = [];
+  // 1. Fetch Published Stories
+  const { data: publishedStories, isLoading: loadingPublished } = usePosts({ 
+    authorId: currentUser.id, 
+    status: 'published' 
+  });
+
+  // 2. Fetch Drafts
+  const { data: draftStories, isLoading: loadingDrafts } = usePosts({ 
+    authorId: currentUser.id, 
+    status: 'draft' 
+  });
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="mb-2">Your Stories</h1>
-          <p className="text-gray-600">
-            Manage your published stories and drafts
-          </p>
+          <h1 className="mb-2 text-2xl font-bold">Your Stories</h1>
+          <p className="text-gray-600">Manage your published stories and drafts</p>
         </div>
         <Button onClick={() => navigate('/editor')}>
           <FileText className="h-4 w-4 mr-2" />
@@ -46,15 +40,19 @@ export function Stories() {
       </div>
 
       <Tabs defaultValue="published" className="w-full">
-        {/* ... TabsList giữ nguyên ... */}
         <TabsList className="mb-6">
-          <TabsTrigger value="published">Published ({publishedStories.length})</TabsTrigger>
-          <TabsTrigger value="drafts">Drafts ({draftStories.length})</TabsTrigger>
-          <TabsTrigger value="unlisted">Unlisted ({unlistedStories.length})</TabsTrigger>
+          <TabsTrigger value="published">
+            Published {publishedStories ? `(${publishedStories.length})` : ''}
+          </TabsTrigger>
+          <TabsTrigger value="drafts">
+            Drafts {draftStories ? `(${draftStories.length})` : ''}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="published">
-          {publishedStories.length > 0 ? (
+          {loadingPublished ? (
+            <div className="py-10">Loading...</div>
+          ) : publishedStories && publishedStories.length > 0 ? (
             <div className="space-y-4">
               {publishedStories.map((story) => (
                 <StoryItem key={story.id} story={story} />
@@ -70,7 +68,9 @@ export function Stories() {
         </TabsContent>
 
         <TabsContent value="drafts">
-          {draftStories.length > 0 ? (
+          {loadingDrafts ? (
+             <div className="py-10">Loading...</div>
+          ) : draftStories && draftStories.length > 0 ? (
             <div className="space-y-4">
               {draftStories.map((story) => (
                 <StoryItem key={story.id} story={story} />
@@ -80,89 +80,47 @@ export function Stories() {
             <EmptyState title="No drafts" description="Your draft stories will appear here" />
           )}
         </TabsContent>
-
-        <TabsContent value="unlisted">
-          {unlistedStories.length > 0 ? (
-            <div className="space-y-4">
-              {unlistedStories.map((story) => (
-                <StoryItem key={story.id} story={story} />
-              ))}
-            </div>
-          ) : (
-            <EmptyState title="No unlisted stories" description="Stories set to unlisted will appear here" />
-          )}
-        </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-// [SỬA] Component StoryItem tự dùng hook
+// Component con giữ nguyên logic hiển thị, chỉ đảm bảo type Post đúng
 function StoryItem({ story }: { story: Post }) {
-  const navigate = useNavigate(); // [MỚI]
-  
-  const formattedDate = new Date(story.datePublished).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  const navigate = useNavigate();
+  const formattedDate = new Date(story.datePublished || Date.now()).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric'
   });
 
   return (
     <div className="flex gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-4 mb-2">
-          <h3 className="line-clamp-2 cursor-pointer hover:underline" onClick={() => navigate(`/post/${story.id}`)}>
-            {story.title}
+          <h3 className="font-semibold line-clamp-2 cursor-pointer hover:underline" onClick={() => navigate(`/post/${story.id}`)}>
+            {story.title || "Untitled Draft"}
           </h3>
-          {story.status === 'draft' && (
-            <Badge variant="secondary">Draft</Badge>
-          )}
+          {story.status === 'draft' && <Badge variant="secondary">Draft</Badge>}
         </div>
-        {/* ... Giữ nguyên phần hiển thị nội dung ... */}
-        <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-          {story.excerpt}
-        </p>
         <div className="flex items-center gap-4 text-sm text-gray-500">
           <span>{formattedDate}</span>
           {story.status === 'published' && (
             <>
               <span>·</span>
-              <span className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                {story.stats.views} views
-              </span>
-              <span>·</span>
-              <span>{story.stats.likes} likes</span>
-              <span>·</span>
-              <span>{story.stats.comments} comments</span>
+              <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {story.stats?.views || 0} views</span>
             </>
           )}
         </div>
       </div>
-
       <div className="flex items-start gap-2">
-        <Button variant="outline" size="sm" onClick={() => navigate('/editor')}>
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
+        <Button variant="outline" size="sm" onClick={() => navigate(`/editor?id=${story.id}`)}>
+          <Edit className="h-4 w-4 mr-2" /> Edit
         </Button>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
+            <Button variant="outline" size="icon"><MoreVertical className="h-4 w-4" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => navigate(`/post/${story.id}`)}>
-              <Eye className="h-4 w-4 mr-2" />
-              View
-            </DropdownMenuItem>
-            <DropdownMenuItem>Duplicate</DropdownMenuItem>
-            <DropdownMenuItem>Change visibility</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600"><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -174,7 +132,7 @@ function EmptyState({ title, description, action }: { title: string; description
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <FileText className="h-12 w-12 text-gray-300 mb-4" />
-      <h3 className="mb-2">{title}</h3>
+      <h3 className="mb-2 font-medium">{title}</h3>
       <p className="text-gray-500 mb-6">{description}</p>
       {action}
     </div>

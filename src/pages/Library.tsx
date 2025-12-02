@@ -1,115 +1,110 @@
-import { useState } from 'react';
 import { Bookmark, Star, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // [MỚI]
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
 import { PostCard } from '@/features/feed/PostCard';
-import { mockPosts } from '@/lib/mockData';
-
-// [XÓA] interface LibraryProps cũ
+// [MỚI] Import hook
+import { usePosts } from '@/features/post/api/get-posts';
 
 export function Library() {
-  const navigate = useNavigate(); // [MỚI]
+  const navigate = useNavigate();
   
-  // Mock saved posts (first 2 posts)
-  const savedPosts = mockPosts.slice(0, 2);
-  const favoritePosts = mockPosts.slice(1, 3);
-  const readLaterPosts = mockPosts.slice(2, 4);
+  // 1. Fetch Saved Posts
+  const { data: savedPosts, isLoading: loadingSaved } = usePosts({ isSaved: true });
+
+  // 2. Fetch Favorite Posts (Liked)
+  const { data: favoritePosts, isLoading: loadingFavorites } = usePosts({ isLiked: true });
+
+  // 3. Fetch Read Later (Tạm thời giả định backend có cờ này, hoặc dùng chung saved)
+  // Nếu chưa có API riêng, tạm thời để mảng rỗng hoặc dùng savedPosts demo
+  const { data: readLaterPosts } = usePosts({ status: 'read_later' }); 
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="mb-2">Library</h1>
-        <p className="text-gray-600">
-          Your saved stories, favorites, and reading list
-        </p>
+        <h1 className="mb-2 text-2xl font-bold">Library</h1>
+        <p className="text-gray-600">Your saved stories, favorites, and reading list</p>
       </div>
 
       <Tabs defaultValue="saved" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="saved" className="gap-2">
-            <Bookmark className="h-4 w-4" />
-            Saved
+            <Bookmark className="h-4 w-4" /> Saved
           </TabsTrigger>
           <TabsTrigger value="favorites" className="gap-2">
-            <Star className="h-4 w-4" />
-            Favorites
+            <Star className="h-4 w-4" /> Favorites
           </TabsTrigger>
           <TabsTrigger value="later" className="gap-2">
-            <Clock className="h-4 w-4" />
-            Read Later
+            <Clock className="h-4 w-4" /> Read Later
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="saved">
-          {savedPosts.length > 0 ? (
-            <div>
-              {savedPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onClick={() => navigate(`/post/${post.id}`)} // [SỬA]
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon={<Bookmark className="h-12 w-12 text-gray-300" />}
-              title="No saved stories yet"
-              description="Save stories to read later by clicking the bookmark icon"
-            />
-          )}
+          <PostList 
+            posts={savedPosts} 
+            loading={loadingSaved} 
+            emptyIcon={<Bookmark className="h-12 w-12 text-gray-300" />}
+            emptyTitle="No saved stories yet"
+            emptyDesc="Save stories to read later by clicking the bookmark icon"
+            onPostClick={(id) => navigate(`/post/${id}`)}
+          />
         </TabsContent>
 
         <TabsContent value="favorites">
-          {favoritePosts.length > 0 ? (
-            <div>
-              {favoritePosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onClick={() => navigate(`/post/${post.id}`)} // [SỬA]
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon={<Star className="h-12 w-12 text-gray-300" />}
-              title="No favorites yet"
-              description="Mark your favorite stories by clicking the star icon"
-            />
-          )}
+          <PostList 
+            posts={favoritePosts} 
+            loading={loadingFavorites}
+            emptyIcon={<Star className="h-12 w-12 text-gray-300" />}
+            emptyTitle="No favorites yet"
+            emptyDesc="Mark your favorite stories by clicking the star icon"
+            onPostClick={(id) => navigate(`/post/${id}`)}
+          />
         </TabsContent>
 
         <TabsContent value="later">
-          {readLaterPosts.length > 0 ? (
-            <div>
-              {readLaterPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onClick={() => navigate(`/post/${post.id}`)} // [SỬA]
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon={<Clock className="h-12 w-12 text-gray-300" />}
-              title="Reading list is empty"
-              description="Add stories to read later"
-            />
-          )}
+           <PostList 
+            posts={readLaterPosts} 
+            loading={false}
+            emptyIcon={<Clock className="h-12 w-12 text-gray-300" />}
+            emptyTitle="Reading list is empty"
+            emptyDesc="Add stories to read later"
+            onPostClick={(id) => navigate(`/post/${id}`)}
+          />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function EmptyState({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+// Component phụ để render list cho gọn
+import { Post } from '@/features/post/types';
+
+interface PostListProps {
+  posts?: Post[];
+  loading: boolean;
+  emptyIcon: React.ReactNode;
+  emptyTitle: string;
+  emptyDesc: string;
+  onPostClick: (id: string) => void;
+}
+
+function PostList({ posts, loading, emptyIcon, emptyTitle, emptyDesc, onPostClick }: PostListProps) {
+  if (loading) return <div className="py-10 text-center">Loading...</div>;
+  
+  if (!posts || posts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        {emptyIcon}
+        <h3 className="mt-4 mb-2 font-medium">{emptyTitle}</h3>
+        <p className="text-gray-500">{emptyDesc}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      {icon}
-      <h3 className="mt-4 mb-2">{title}</h3>
-      <p className="text-gray-500">{description}</p>
+    <div>
+      {posts.map((post) => (
+        <PostCard key={post.id} post={post} onClick={() => onPostClick(post.id)} />
+      ))}
     </div>
   );
 }

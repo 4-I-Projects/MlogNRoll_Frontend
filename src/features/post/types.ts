@@ -1,4 +1,4 @@
-import { User } from '../auth/types'; // Import User từ auth
+import { User } from '../auth/types';
 
 export interface PostStats {
   likes: number;
@@ -20,17 +20,21 @@ export interface Post {
   stats: PostStats;
   thumbnail?: string;
   series?: string;
+  
+  // [MỚI] Thêm các trường trạng thái từ API
+  isLiked?: boolean;
+  isSaved?: boolean;
 }
 
 export interface Comment {
   id: string;
   postId: string;
-  authorId: string;
+  authorId?: string; // Có thể optional nếu BE trả về object User lồng nhau
   author?: User;
   parentId: string | null;
   content: string;
-  date: string;
-  likes: number;
+  date: string; // hoặc createdAt
+  likes: number; // hoặc likeCount
   isLiked?: boolean;
   replies?: Comment[];
 }

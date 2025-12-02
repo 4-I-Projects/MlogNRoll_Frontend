@@ -1,9 +1,9 @@
-import { useState } from 'react';
+// import { useState } from 'react'; // Bỏ
+// import { mockPosts } from '../lib/mockData'; // Bỏ
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { PostCard } from '../features/feed/PostCard';
 import { Skeleton } from '../ui/skeleton';
-import { Post } from '@/features/post/types';
-import { mockPosts } from '../lib/mockData';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { usePosts } from '@/features/post/api/get-posts'; // [MỚI]
 
 interface HomeContext {
   searchQuery: string;
@@ -12,20 +12,11 @@ interface HomeContext {
 export function Home() {
   const navigate = useNavigate();
   const { searchQuery } = useOutletContext<HomeContext>();
-  const [posts] = useState<Post[]>(mockPosts);
-  const [loading] = useState(false);
-
-  // Filter posts based on search query
-  const filteredPosts = searchQuery
-    ? posts.filter(
-      (post) =>
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-    : posts;
-
-  if (loading) {
+  
+  // [MỚI] Dùng hook lấy data thật
+// Truyền object { q: searchQuery }
+  const { data: posts, isLoading, error } = usePosts({ q: searchQuery });
+  if (isLoading) {
     return (
       <div className="space-y-6">
         {[1, 2, 3, 4].map((i) => (
@@ -45,7 +36,11 @@ export function Home() {
     );
   }
 
-  if (filteredPosts.length === 0) {
+  if (error) {
+    return <div className="text-center py-20 text-red-500">Failed to load stories.</div>;
+  }
+
+  if (!posts || posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <h3 className="mb-2">No posts found</h3>
@@ -60,7 +55,7 @@ export function Home() {
 
   return (
     <div>
-      {filteredPosts.map((post) => (
+      {posts.map((post) => (
         <PostCard
           key={post.id}
           post={post}

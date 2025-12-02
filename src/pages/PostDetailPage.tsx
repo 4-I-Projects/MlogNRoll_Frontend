@@ -5,11 +5,14 @@ import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { AuthorRow } from '../features/post/components/AuthorRow';
 import { CommentsPanel } from '../features/post/components/CommentsPanel';
-import { Post, Comment } from '../features/post/types';
+import { Comment } from '../features/post/types';
 import { User } from '../features/auth/types';
-import { getPostById, getCommentsByPostId, mockPosts } from '../lib/mockData';
+import { getCommentsByPostId, mockPosts } from '../lib/mockData'; // Bỏ getPostById
 import { PostCard } from '../features/feed/PostCard';
 import { useNavigate, useParams } from 'react-router-dom';
+
+// [MỚI] Import hook API
+import { usePost } from '@/features/post/api/get-post';
 
 interface PostDetailPageProps {
   currentUser: User;
@@ -19,28 +22,48 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const navigate = useNavigate();
   const { postId } = useParams(); 
   
-  // Safe ID check
   const safePostId = postId || '';
 
-  const [post, setPost] = useState<Post | undefined>(getPostById(safePostId));
-  const [comments, setComments] = useState<Comment[]>(getCommentsByPostId(safePostId));
+  // [MỚI] Gọi API Hook
+  const { data: post, isLoading, error } = usePost(safePostId);
+
+  // State cho các tương tác (Like, Comment)
+  // Khởi tạo giá trị mặc định, sẽ được cập nhật khi API trả về data
+  const [comments, setComments] = useState<Comment[]>([]);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [likes, setLikes] = useState(post?.stats.likes || 0);
+  const [likes, setLikes] = useState(0);
 
+  // [MỚI] Đồng bộ dữ liệu từ API vào Local State khi load xong
   useEffect(() => {
-    const foundPost = getPostById(safePostId);
-    setPost(foundPost);
-    setComments(getCommentsByPostId(safePostId));
-    setLikes(foundPost?.stats.likes || 0);
-  }, [safePostId]);
+    if (post) {
+      setLikes(post.stats?.likes || 0);
+      setIsLiked(post.isLiked || false);
+      
+      // Tạm thời vẫn dùng Mock Data cho comment vì chưa có API Comment
+      setComments(getCommentsByPostId(safePostId)); 
+    }
+  }, [post, safePostId]);
 
-  if (!post) {
+  // [MỚI] Loading State
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-40">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-4 w-48 bg-gray-200 rounded mb-4"></div>
+          <div className="h-3 w-32 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // [MỚI] Error State
+  if (error || !post) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <h2 className="mb-2">Post not found</h2>
-          <p className="text-gray-500 mb-4">The post you're looking for doesn't exist.</p>
+          <p className="text-gray-500 mb-4">The post you're looking for doesn't exist or an error occurred.</p>
           <Button onClick={() => navigate('/')}>Go to Home</Button>
         </div>
       </div>
@@ -49,14 +72,14 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
   const handleFollowToggle = () => {
     if (post.author) {
-      // Logic mock follow
-      console.log('Toggle follow');
+      console.log('Toggle follow author:', post.author.id);
     }
   };
 
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikes(isLiked ? likes - 1 : likes + 1);
+    // TODO: Gọi API like/unlike ở đây
   };
 
   const handleAddComment = (content: string) => {
@@ -73,6 +96,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
       replies: [],
     };
     setComments([...comments, newComment]);
+    // TODO: Gọi API create comment ở đây
   };
 
   const handleReply = (commentId: string, content: string) => {
@@ -83,21 +107,24 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     console.log('Like comment', commentId);
   };
 
+  // Logic related posts vẫn dùng mock data tạm thời
   const relatedPosts = mockPosts
-    .filter((p) => p.authorId === post.authorId && p.id !== post.id)
+    .filter((p) => p.authorId === post.author?.id && p.id !== post.id)
     .slice(0, 4);
 
   return (
     <div className="pb-20">
       <article className="max-w-3xl mx-auto">
-        <h1 className="mb-4">{post.title}</h1>
+        <h1 className="mb-4 text-3xl font-bold">{post.title}</h1>
         
-        <AuthorRow
-          author={post.author!}
-          datePublished={post.datePublished}
-          readTime={post.readTime}
-          onFollowToggle={handleFollowToggle}
-        />
+        {post.author && (
+          <AuthorRow
+            author={post.author}
+            datePublished={post.datePublished}
+            readTime={post.readTime}
+            onFollowToggle={handleFollowToggle}
+          />
+        )}
 
         <div className="flex items-center justify-between mb-8 py-4 border-y">
           <div className="flex items-center gap-2">
@@ -119,7 +146,11 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
           </div>
         </div>
 
-        <div className="prose prose-lg max-w-none mb-8" dangerouslySetInnerHTML={{ __html: post.contentHTML }} />
+        {/* Nội dung bài viết */}
+        <div 
+          className="prose prose-lg max-w-none mb-8" 
+          dangerouslySetInnerHTML={{ __html: post.contentHTML }} 
+        />
 
         <div className="flex flex-wrap gap-2 mb-8">
           {post.tags.map((tag) => (
@@ -140,7 +171,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
       {relatedPosts.length > 0 && (
         <div className="max-w-3xl mx-auto mt-16">
-          <h2 className="mb-6">More from {post.author?.name}</h2>
+          <h2 className="mb-6 font-semibold text-xl">More from {post.author?.name}</h2>
           <div className="space-y-0">
             {relatedPosts.map((relatedPost) => (
               <PostCard

@@ -1,4 +1,4 @@
-import { Home, Library, FileText, Users, Settings, Bookmark, Star, Clock, LogIn, UserPlus } from 'lucide-react';
+import { Home, Library, FileText, Users, Settings, LogIn, UserPlus } from 'lucide-react';
 import { cn } from '../../ui/utils';
 import { Button } from '../../ui/button';
 import { Sheet, SheetContent } from '../../ui/sheet';
@@ -30,11 +30,11 @@ const navItems: NavItem[] = [
     id: 'library',
     label: 'Library',
     icon: <Library className="h-5 w-5" />,
-    children: [
-      { id: 'library-saved', label: 'Saved', icon: <Bookmark className="h-4 w-4" /> },
-      { id: 'library-favorites', label: 'Favorites', icon: <Star className="h-4 w-4" /> },
-      { id: 'library-later', label: 'Read later', icon: <Clock className="h-4 w-4" /> },
-    ],
+    // children: [
+    //   { id: 'library-saved', label: 'Saved', icon: <Bookmark className="h-4 w-4" /> },
+    //   { id: 'library-favorites', label: 'Favorites', icon: <Star className="h-4 w-4" /> },
+    //   { id: 'library-later', label: 'Read later', icon: <Clock className="h-4 w-4" /> },
+    // ],
   },
   {
     id: 'stories',
