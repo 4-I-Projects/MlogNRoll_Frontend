@@ -56,8 +56,7 @@ export const AppLayout = () => {
     <div className="min-h-screen bg-white">
       <Topbar 
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
-        user={displayUser}
-        notificationsCount={0} // Tạm thời để 0 hoặc fetch API notification sau
+        notificationsCount={0}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />

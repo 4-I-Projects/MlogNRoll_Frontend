@@ -1,6 +1,8 @@
+/// <reference types="vite/client" />
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000/api/v1';
+// Cần đảm bảo biến môi trường này được thiết lập (hoặc dùng fallback localhost)
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -9,12 +11,18 @@ export const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  // Lấy token mà AuthProvider đã lưu vào localStorage ở bước App.tsx
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
-  (response) => {
-    return response.data;
-  },
+  (response) => response.data,
   (error) => {
-    // Bạn có thể xử lý logout tự động nếu gặp lỗi 401 tại đây
     const message = error.response?.data?.error || error.message;
     console.error('API Error:', message);
     return Promise.reject(error);

@@ -1,4 +1,4 @@
-import { Search, Menu, Bell, PenSquare, LogIn, UserPlus } from 'lucide-react';
+import { Search, Menu, Bell, PenSquare, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
@@ -9,13 +9,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu';
-import { User } from '@/features/auth/types';
+// import { User } from '@/features/auth/types'; // Bỏ import User cũ nếu không dùng props nữa
 import { Badge } from '../../ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from 'react-oidc-context'; // [MỚI]
 
 interface TopbarProps {
   onToggleSidebar: () => void;
-  user: User;
+  // user: User; // [SỬA] Có thể bỏ prop user vì ta lấy từ hook useAuth trực tiếp
   notificationsCount: number;
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -23,39 +24,47 @@ interface TopbarProps {
 
 export function Topbar({ 
   onToggleSidebar, 
-  user, 
+  // user, // Bỏ props này
   notificationsCount,
   searchQuery,
   onSearchChange,
 }: TopbarProps) {
   const navigate = useNavigate();
+  const auth = useAuth(); // [MỚI] Lấy trạng thái auth
+
+  const isAuthenticated = auth.isAuthenticated;
+  const userProfile = auth.user?.profile;
+
+  // Lấy tên hiển thị: preferred_username hoặc name hoặc sub
+  const displayName = userProfile?.preferred_username || userProfile?.name || 'User';
+  // Lấy chữ cái đầu cho avatar
+  const initial = displayName.charAt(0).toUpperCase();
+
+  const handleLogout = () => {
+    // Xóa token localStorage
+    localStorage.removeItem('accessToken');
+    // Logout khỏi Keycloak và quay về trang chủ
+    auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="flex h-16 items-center gap-4 px-4 md:px-6">
+        {/* ... Phần Logo và Sidebar Trigger giữ nguyên ... */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggleSidebar}
-            className="lg:hidden"
-          >
+          <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="lg:hidden">
             <Menu className="h-5 w-5" />
           </Button>
-          
-          <button 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
-              M
-            </div>
+          <button onClick={() => navigate('/')} className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">M</div>
             <span className="hidden sm:inline">Medium Clone</span>
           </button>
         </div>
 
+        {/* Search Bar */}
         <div className="flex-1 max-w-md mx-auto">
-          <div className="relative">
+           {/* ... Code Search giữ nguyên ... */}
+           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
               type="search"
@@ -68,79 +77,62 @@ export function Topbar({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2"
-            onClick={() => navigate('/login')}
-          >
-            <LogIn className="h-4 w-4" />
-            <span className="hidden sm:inline">Đăng nhập</span>
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2"
-            onClick={() => navigate('/register')}
-          >
-            <UserPlus className="h-4 w-4" />
-            <span className="hidden sm:inline">Đăng ký</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2"
-            onClick={() => navigate('/editor')}
-          >
-            <PenSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">Write</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={() => navigate('/')}
-          >
-            <Bell className="h-5 w-5" />
-            {notificationsCount > 0 && (
-              <Badge 
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"
-                variant="destructive"
-              >
-                {notificationsCount}
-              </Badge>
-            )}
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                </Avatar>
+          {/* Logic hiển thị dựa trên trạng thái đăng nhập */}
+          {!isAuthenticated ? (
+            <>
+              <Button variant="ghost" size="sm" className="gap-2" onClick={() => auth.signinRedirect()}>
+                <LogIn className="h-4 w-4" />
+                <span className="hidden sm:inline">Đăng nhập</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/library')}>
-                Library
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/stories')}>
-                Stories
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>Sign out</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              
+              <Button variant="ghost" size="sm" className="gap-2" onClick={() => auth.signinRedirect({ prompt: 'create',extraQueryParams: { kc_action: 'register' } })}>
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Đăng ký</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/editor')}>
+                <PenSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">Write</span>
+              </Button>
+
+              <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('/')}>
+                <Bell className="h-5 w-5" />
+                {notificationsCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0" variant="destructive">
+                    {notificationsCount}
+                  </Badge>
+                )}
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      {/* Keycloak mặc định không có avatar URL, dùng Fallback tạm */}
+                      <AvatarImage src="" alt={displayName} />
+                      <AvatarFallback>{initial}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex items-center justify-start gap-2 p-2 font-medium text-sm">
+                    <span className="truncate">{displayName}</span>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/library')}>Library</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/stories')}>Stories</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </div>
     </header>
