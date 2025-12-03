@@ -14,6 +14,9 @@ export const AppLayout = () => {
 
   // [MỚI] Fetch data user thật
   const { data: user, isLoading, error } = useCurrentUser();
+  if (isLoading) {
+    return <div className="h-screen flex items-center justify-center">Loading application...</div>;
+  }
 
   // [MỚI] Redirect nếu chưa login (Tùy logic app của bạn)
   useEffect(() => {
@@ -54,20 +57,20 @@ export const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Topbar 
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+      <Topbar
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         notificationsCount={0}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
-      
+
       <div className="flex">
-        <Sidebar 
-          visible={sidebarOpen} 
+        <Sidebar
+          visible={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           isMobile={isMobile}
         />
-        
+
         <main className="flex-1 min-w-0">
           <div className="max-w-4xl mx-auto px-4 md:px-6 py-8">
             {/* Truyền user và searchQuery xuống các trang con */}
