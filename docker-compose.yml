@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
@@ -9,5 +11,5 @@ services:
       - "8080:8080"
     volumes:
       - ./keycloak-theme/my-theme:/opt/keycloak/themes/mlog-theme
-    # SỬA DÒNG NÀY:
-    command: start-dev --theme-static-max-age=-1 --cache-templates=false --cache-themes=false
+    # Đã sửa dòng command bên dưới:
+    command: start-dev --spi-theme-static-max-age=-1 --spi-theme-cache-themes=false --spi-theme-cache-templates=false
