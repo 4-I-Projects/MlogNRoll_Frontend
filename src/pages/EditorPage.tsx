@@ -31,7 +31,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
   
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
-  // ... (Các useEffect tính toán word count và auto-save giữ nguyên)
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(Boolean).length;
     setWordCount(words);
@@ -65,7 +64,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
       title,
       subtitle,
       content,
-      themeId, // <--- Gửi themeId đi
+      themeId,
       ...settings
     };
 

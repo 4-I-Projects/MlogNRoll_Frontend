@@ -7,12 +7,9 @@ export function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Nếu đã login rồi thì đá về Home
     if (auth.isAuthenticated) {
       navigate('/');
     } else {
-      // Nếu chưa, chuyển hướng sang Keycloak
-      // Dùng void để tránh warning promise
       void auth.signinRedirect();
     }
   }, [auth.isAuthenticated, auth.signinRedirect, navigate]);

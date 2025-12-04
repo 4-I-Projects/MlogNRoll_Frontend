@@ -2,20 +2,17 @@ import { Bookmark, Star, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
 import { PostCard } from '@/features/feed/PostCard';
-// [MỚI] Import hook
 import { usePosts } from '@/features/post/api/get-posts';
+import { Post } from '@/features/post/types';
+
 
 export function Library() {
   const navigate = useNavigate();
   
-  // 1. Fetch Saved Posts
   const { data: savedPosts, isLoading: loadingSaved } = usePosts({ isSaved: true });
 
-  // 2. Fetch Favorite Posts (Liked)
   const { data: favoritePosts, isLoading: loadingFavorites } = usePosts({ isLiked: true });
 
-  // 3. Fetch Read Later (Tạm thời giả định backend có cờ này, hoặc dùng chung saved)
-  // Nếu chưa có API riêng, tạm thời để mảng rỗng hoặc dùng savedPosts demo
   const { data: readLaterPosts } = usePosts({ status: 'read_later' }); 
 
   return (
@@ -75,8 +72,6 @@ export function Library() {
   );
 }
 
-// Component phụ để render list cho gọn
-import { Post } from '@/features/post/types';
 
 interface PostListProps {
   posts?: Post[];

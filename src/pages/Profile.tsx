@@ -13,24 +13,19 @@ export function Profile() {
   const navigate = useNavigate();
   const { userId } = useParams(); 
   
-  // Lấy currentUser từ context (AppLayout truyền xuống) nếu đang xem profile chính mình
   const { currentUser } = useOutletContext<{ currentUser: User }>();
 
-  // Xác định ID cần fetch: nếu không có userId trên URL -> xem profile chính mình
   const targetId = userId || currentUser.id;
 
-  // 1. Fetch User Info
   const { data: user, isLoading: isLoadingUser } = useUser(targetId);
 
-  // 2. Fetch User Posts
   const { data: userPosts, isLoading: isLoadingPosts } = usePosts({ 
     authorId: targetId,
-    status: 'published' // Chỉ lấy bài đã public
+    status: 'published'
   });
 
   if (isLoadingUser) return <div className="text-center py-20">Loading profile...</div>;
 
-  // Nếu không tìm thấy user hoặc lỗi
   if (!user) return <div className="text-center py-20">User not found</div>;
 
   const stats = [

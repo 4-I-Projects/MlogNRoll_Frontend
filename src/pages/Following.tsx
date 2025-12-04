@@ -9,22 +9,17 @@ import { useFollowers, useFollowing } from '@/features/auth/api/get-follows';
 import { useUsers } from '@/features/auth/api/get-users';
 
 export function Following() {
-  // Lấy ID của user hiện tại
   const { currentUser } = useOutletContext<{ currentUser: User }>();
   const userId = currentUser?.id || '';
 
-  // 1. Fetch Following
   const { data: followingData, isLoading: loadFollowing } = useFollowing(userId);
   const followingUsers = followingData?.data || [];
 
-  // 2. Fetch Followers
   const { data: followersData, isLoading: loadFollowers } = useFollowers(userId);
   const followersUsers = followersData?.data || [];
 
-  // 3. Fetch Suggested (Lấy tất cả user làm gợi ý tạm thời)
   const { data: suggestedUsers, isLoading: loadSuggested } = useUsers();
 
-  // Helper render loading
   if (!userId) return <div className="py-10 text-center">Please login to view this page.</div>;
 
   return (
@@ -77,7 +72,6 @@ export function Following() {
   );
 }
 
-// Component UserCard giữ nguyên nhưng đảm bảo import đúng
 function UserCard({ user }: { user: User }) {
   const navigate = useNavigate(); 
   

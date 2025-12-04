@@ -11,7 +11,6 @@ import { getCommentsByPostId, mockPosts } from '../lib/mockData'; // Bỏ getPos
 import { PostCard } from '../features/feed/PostCard';
 import { useNavigate, useParams } from 'react-router-dom';
 
-// [MỚI] Import hook API
 import { usePost } from '@/features/post/api/get-post';
 import { themes } from '../themes';
 
@@ -25,23 +24,18 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   
   const safePostId = postId || '';
 
-  // [MỚI] Gọi API Hook
   const { data: post, isLoading, error } = usePost(safePostId);
 
-  // State cho các tương tác (Like, Comment)
-  // Khởi tạo giá trị mặc định, sẽ được cập nhật khi API trả về data
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likes, setLikes] = useState(0);
 
-  // [MỚI] Đồng bộ dữ liệu từ API vào Local State khi load xong
   useEffect(() => {
     if (post) {
       setLikes(post.stats?.likes || 0);
       setIsLiked(post.isLiked || false);
       
-      // Tạm thời vẫn dùng Mock Data cho comment vì chưa có API Comment
       setComments(getCommentsByPostId(safePostId)); 
     }
   }, [post, safePostId]);
@@ -49,7 +43,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const currentThemeId = post ? (post as any).themeId : 'happy';
   const theme = themes[currentThemeId as keyof typeof themes] || themes.happy;
   
-  // [MỚI] Loading State
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-40">
@@ -61,7 +54,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     );
   }
 
-  // [MỚI] Error State
   if (error || !post) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -83,7 +75,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikes(isLiked ? likes - 1 : likes + 1);
-    // TODO: Gọi API like/unlike ở đây
   };
 
   const handleAddComment = (content: string) => {
@@ -100,7 +91,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
       replies: [],
     };
     setComments([...comments, newComment]);
-    // TODO: Gọi API create comment ở đây
   };
 
   const handleReply = (commentId: string, content: string) => {
@@ -111,7 +101,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     console.log('Like comment', commentId);
   };
 
-  // Logic related posts vẫn dùng mock data tạm thời
   const relatedPosts = mockPosts
     .filter((p) => p.authorId === post.author?.id && p.id !== post.id)
     .slice(0, 4);

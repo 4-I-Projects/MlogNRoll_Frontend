@@ -6,7 +6,6 @@ import { useCurrentUser } from '@/features/auth/api/get-current-user';
 import { User } from '@/features/auth/types';
 
 export const AppLayout = () => {
-  // 1. Khai báo TẤT CẢ hooks ở đầu
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,11 +14,9 @@ export const AppLayout = () => {
 
   const { data: user, isLoading, error } = useCurrentUser();
 
-  // Các useEffect vẫn phải được gọi kể cả khi đang loading
   useEffect(() => {
     // Logic redirect
     if (!isLoading && !user && error) {
-       // navigate('/login');
     }
   }, [user, isLoading, error, navigate]);
 
@@ -38,12 +35,10 @@ export const AppLayout = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // 2. SAU KHI xong hết hooks, mới được phép return sớm
   if (isLoading) {
     return <div className="h-screen flex items-center justify-center">Loading application...</div>;
   }
 
-  // 3. Logic render chính
   const defaultUser: User = {
     id: '',
     name: 'Guest',

@@ -1,9 +1,7 @@
-// import { useState } from 'react'; // Bỏ
-// import { mockPosts } from '../lib/mockData'; // Bỏ
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { PostCard } from '../features/feed/PostCard';
 import { Skeleton } from '../ui/skeleton';
-import { usePosts } from '@/features/post/api/get-posts'; // [MỚI]
+import { usePosts } from '@/features/post/api/get-posts';
 
 interface HomeContext {
   searchQuery: string;
@@ -13,8 +11,6 @@ export function Home() {
   const navigate = useNavigate();
   const { searchQuery } = useOutletContext<HomeContext>();
   
-  // [MỚI] Dùng hook lấy data thật
-// Truyền object { q: searchQuery }
   const { data: posts, isLoading, error } = usePosts({ q: searchQuery });
   if (isLoading) {
     return (
