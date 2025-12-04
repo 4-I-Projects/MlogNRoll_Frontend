@@ -85,7 +85,7 @@ export function Topbar({
                 <span className="hidden sm:inline">Đăng nhập</span>
               </Button>
               
-              <Button variant="ghost" size="sm" className="gap-2" onClick={() => auth.signinRedirect({ prompt: 'create',extraQueryParams: { kc_action: 'register' } })}>
+              <Button variant="ghost" size="sm" className="gap-2" onClick={() => auth.signinRedirect({ prompt: 'create', extraQueryParams: { kc_action: 'register' } })}>
                 <UserPlus className="h-4 w-4" />
                 <span className="hidden sm:inline">Đăng ký</span>
               </Button>

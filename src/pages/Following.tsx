@@ -9,7 +9,6 @@ import { useFollowers, useFollowing } from '@/features/auth/api/get-follows';
 import { useUsers } from '@/features/auth/api/get-users';
 
 export function Following() {
-  const navigate = useNavigate();
   // Lấy ID của user hiện tại
   const { currentUser } = useOutletContext<{ currentUser: User }>();
   const userId = currentUser?.id || '';
