@@ -13,6 +13,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 // [MỚI] Import hook API
 import { usePost } from '@/features/post/api/get-post';
+import { themes } from '../themes';
 
 interface PostDetailPageProps {
   currentUser: User;
@@ -45,6 +46,9 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     }
   }, [post, safePostId]);
 
+  const currentThemeId = post ? (post as any).themeId : 'happy';
+  const theme = themes[currentThemeId as keyof typeof themes] || themes.happy;
+  
   // [MỚI] Loading State
   if (isLoading) {
     return (
@@ -113,9 +117,20 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     .slice(0, 4);
 
   return (
-    <div className="pb-20">
-      <article className="max-w-3xl mx-auto">
-        <h1 className="mb-4 text-3xl font-bold">{post.title}</h1>
+    <div 
+      className="pb-20 min-h-screen transition-colors duration-300"
+      style={{ 
+          backgroundColor: theme.background, 
+          color: theme.text 
+      }}
+    >
+      <article className="max-w-3xl mx-auto pt-10 px-6">
+        <h1 
+            className="mb-4 text-3xl font-bold"
+            style={{ color: theme.accent }}
+        >
+            {post.title}
+        </h1>
         
         {post.author && (
           <AuthorRow
@@ -148,7 +163,8 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
         {/* Nội dung bài viết */}
         <div 
-          className="prose prose-lg max-w-none mb-8" 
+          className="prose prose-lg max-w-none mb-8"
+          style={{ '--tw-prose-body': theme.text, '--tw-prose-headings': theme.text } as any} 
           dangerouslySetInnerHTML={{ __html: post.contentHTML }} 
         />
 

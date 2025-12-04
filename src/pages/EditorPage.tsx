@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { User } from '@/features/auth/types';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import ThemeSelector from '../components/ThemeSelector'; // Import component chọn theme
+import { themes } from '../themes'; // Import bộ màu
 
 interface EditorPageProps {
   currentUser: User;
@@ -16,6 +18,8 @@ interface EditorPageProps {
 
 export function EditorPage({ currentUser }: EditorPageProps) {
   const navigate = useNavigate();
+  const [themeId, setThemeId] = useState('happy');
+  const currentTheme = themes[themeId as keyof typeof themes] || themes.happy; // Lấy object màu tương ứng (nếu không tìm thấy thì default là happy)
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [content, setContent] = useState('');
@@ -38,10 +42,11 @@ export function EditorPage({ currentUser }: EditorPageProps) {
     if (!title && !content) return;
     const timer = setTimeout(() => handleSaveDraft(), 5000);
     return () => clearTimeout(timer);
-  }, [title, subtitle, content]);
+  }, [title, subtitle, content, themeId]);
 
   const handleSaveDraft = () => {
     setIsSaving(true);
+    console.log('Auto saving draft with theme:', themeId);
     setTimeout(() => {
       setIsSaving(false);
       setLastSaved(new Date());
@@ -56,6 +61,14 @@ export function EditorPage({ currentUser }: EditorPageProps) {
   };
 
   const handlePublish = (settings: PublishSettings) => {
+    const postPayload = {
+      title,
+      subtitle,
+      content,
+      themeId, // <--- Gửi themeId đi
+      ...settings
+    };
+
     console.log('Publishing:', settings);
     toast.success('Published successfully!');
     setShowPublishModal(false);
@@ -68,8 +81,15 @@ export function EditorPage({ currentUser }: EditorPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 z-50 border-b bg-white">
+    <div 
+      className="min-h-screen transition-colors duration-500 ease-in-out"
+      style={{ backgroundColor: currentTheme.background }}
+    >
+      {/* Header */}
+      <div 
+        className="sticky top-0 z-50 border-b transition-colors duration-500"
+        style={{ backgroundColor: currentTheme.background }}
+      >
         <div className="flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
@@ -93,24 +113,33 @@ export function EditorPage({ currentUser }: EditorPageProps) {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-12">
+        <div className="mb-6">
+            <label className="block text-sm font-medium mb-2" style={{ color: currentTheme.text }}>
+                Post Vibe (Theme)
+            </label>
+            <ThemeSelector onSelect={setThemeId} />
+        </div>
         <Input
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="border-0 text-4xl px-0 mb-4 placeholder:text-gray-300 focus-visible:ring-0"
+          className="border-0 text-4xl px-0 mb-4 placeholder:text-black focus-visible:ring-0 bg-transparent"
+          style={{ color: currentTheme.text }}
         />
         <Input
           placeholder="Subtitle (optional)"
           value={subtitle}
           onChange={(e) => setSubtitle(e.target.value)}
-          className="border-0 text-xl px-0 mb-8 text-gray-600 placeholder:text-gray-300 focus-visible:ring-0"
+          className="border-0 text-xl px-0 mb-8 placeholder:text-black focus-visible:ring-0 bg-transparent"
+          style={{ color: currentTheme.text }}
         />
         <Textarea
           ref={contentRef}
           placeholder="Tell your story..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="border-0 px-0 min-h-[500px] resize-none text-lg placeholder:text-gray-300 focus-visible:ring-0"
+          className="border-0 px-0 min-h-[500px] resize-none text-lg placeholder:text-black focus-visible:ring-0 bg-transparent"
+          style={{ color: currentTheme.text }}
         />
       </div>
 
