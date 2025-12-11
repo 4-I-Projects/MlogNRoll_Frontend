@@ -43,13 +43,13 @@ export function PostCard({ post, onClick }: PostCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {/* Tags */}
-              <div className="flex gap-2">
+              {/* <div className="flex gap-2">
                 {post.tags.slice(0, 2).map((tag, i) => (
                   <Badge key={i} variant="secondary" className="text-xs">
                     {tag}
                   </Badge>
                 ))}
-              </div>
+              </div> */}
               
               {/* Read time */}
               <span className="text-sm text-gray-500">{post.readTime} min read</span>
@@ -66,7 +66,7 @@ export function PostCard({ post, onClick }: PostCardProps) {
                 }}
               >
                 <Heart className="h-4 w-4" />
-                <span className="text-xs">{post.stats.likes}</span>
+                {/* <span className="text-xs">{post.stats.likes}</span> */}
               </Button>
               
               <Button 
@@ -78,7 +78,7 @@ export function PostCard({ post, onClick }: PostCardProps) {
                 }}
               >
                 <MessageCircle className="h-4 w-4" />
-                <span className="text-xs">{post.stats.comments}</span>
+                {/* <span className="text-xs">{post.stats.comments}</span> */}
               </Button>
               
               <Button 

@@ -154,7 +154,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
         <div 
           className="prose prose-lg max-w-none mb-8"
           style={{ '--tw-prose-body': theme.text, '--tw-prose-headings': theme.text } as any} 
-          dangerouslySetInnerHTML={{ __html: post.contentHTML }} 
+          dangerouslySetInnerHTML={{ __html: post.body }} 
         />
 
         <div className="flex flex-wrap gap-2 mb-8">
