@@ -16,11 +16,9 @@ export default function ChatBot({ content, titleSetter }: { content?: string, ti
   const { themeId, setThemeId } = useTheme();
 
   useEffect(() => {
-    // 1. Hạ thấp giới hạn: Chỉ cần gõ 2 từ là Bot quét
     if (!content || content.length < 3) return;
     const lower = content.toLowerCase();
     
-    // 2. Định nghĩa từ khóa cho trọn bộ 5 theme
     const triggers = [
   { id: 'sad', words: ['buồn', 'mưa', 'khóc', 'tệ'], msg: "Tâm trạng hơi trầm lắng. Đổi sang theme Buồn nhé?" },
   { id: 'romantic', words: ['yêu', 'thương', 'anh', 'em', 'nhớ'], msg: "Trông bạn thật hạnh phúc! Đổi sang theme Lãng mạn không?" },
@@ -39,7 +37,7 @@ export default function ChatBot({ content, titleSetter }: { content?: string, ti
         break; 
       }
     }
-  }, [content, themeId]); // themeId thay đổi thì bot cũng cập nhật lại
+  }, [content, themeId]);
 
   const suggestTitle = () => {
     const list = TITLE_SUGGESTIONS[themeId] || TITLE_SUGGESTIONS.happy;

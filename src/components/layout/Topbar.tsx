@@ -1,4 +1,4 @@
-import { Search, Menu, Bell, PenSquare, LogIn, UserPlus, LogOut } from 'lucide-react';
+import { Search, Menu, Bell, PenSquare, LogIn, UserPlus, LogOut, Palette } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
@@ -12,6 +12,7 @@ import {
 import { Badge } from '../../ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
+import { useTheme } from '../../context/ThemeContext';
 
 interface TopbarProps {
   onToggleSidebar: () => void;
@@ -22,13 +23,14 @@ interface TopbarProps {
 
 export function Topbar({ 
   onToggleSidebar, 
-  // user, // Bo props này
   notificationsCount,
   searchQuery,
   onSearchChange,
 }: TopbarProps) {
   const navigate = useNavigate();
   const auth = useAuth();
+  
+  const { themeId, setThemeId } = useTheme();
 
   const isAuthenticated = auth.isAuthenticated;
   const userProfile = auth.user?.profile;
@@ -37,32 +39,38 @@ export function Topbar({
   const initial = displayName.charAt(0).toUpperCase();
 
   const handleLogout = () => {
-    // Xóa token localStorage
     localStorage.removeItem('accessToken');
-    // Logout khỏi Keycloak và quay về trang chủ
     auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
   };
 
+  const cycleTheme = () => {
+    // Danh sách tên theme (string) chứ không phải object theme
+    const themes = ['happy', 'sad', 'angry', 'tired', 'romantic'];
+    const currentIndex = themes.indexOf(themeId);
+    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % themes.length;
+    setThemeId(themes[nextIndex]);
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 transition-colors duration-300">
       <div className="flex h-16 items-center gap-4 px-4 md:px-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="lg:hidden">
             <Menu className="h-5 w-5" />
           </Button>
           <button onClick={() => navigate('/')} className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">M</div>
-            <span className="hidden sm:inline">MlognRoll</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold transition-colors">M</div>
+            <span className="hidden sm:inline font-bold text-lg tracking-tight">MlognRoll</span>
           </button>
         </div>
 
         <div className="flex-1 max-w-md mx-auto">
            <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search..."
-              className="pl-9 bg-gray-50 border-gray-200"
+              className="pl-9 bg-muted/50 border-transparent focus:bg-background transition-all"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -70,6 +78,18 @@ export function Topbar({
         </div>
 
         <div className="flex items-center gap-2">
+          
+          {/* Nút đổi theme DEBUG */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={cycleTheme}
+            title={`Theme hiện tại: ${themeId}`}
+            className="text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Palette className="h-5 w-5" />
+          </Button>
+
           {!isAuthenticated ? (
             <>
               <Button variant="ghost" size="sm" className="gap-2" onClick={() => auth.signinRedirect()}>
@@ -100,7 +120,7 @@ export function Topbar({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20 transition-all">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src="" alt={displayName} />
                       <AvatarFallback>{initial}</AvatarFallback>
@@ -117,7 +137,7 @@ export function Topbar({
                   <DropdownMenuItem onClick={() => navigate('/stories')}>Stories</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                     <LogOut className="mr-2 h-4 w-4" /> Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>

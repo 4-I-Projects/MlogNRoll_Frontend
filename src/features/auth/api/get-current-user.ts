@@ -10,6 +10,6 @@ export const useCurrentUser = () => {
   return useQuery({
     queryKey: ['users', 'me'],
     queryFn: getCurrentUser,
-    retry: false, // Nếu lỗi (chưa login) thì không retry liên tục
+    retry: false,
   });
 };

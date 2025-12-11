@@ -15,7 +15,6 @@ export const getFollowing = async (userId: string): Promise<UserListResponse> =>
   return apiClient.get(`/users/${userId}/following`);
 };
 
-// Hook lấy danh sách Followers
 export const useFollowers = (userId: string) => {
   return useQuery({
     queryKey: ['users', userId, 'followers'],

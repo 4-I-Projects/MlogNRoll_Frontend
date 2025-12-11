@@ -51,7 +51,7 @@ export const AppLayout = () => {
   const displayUser = user || defaultUser;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
       <Topbar 
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
         notificationsCount={0}
