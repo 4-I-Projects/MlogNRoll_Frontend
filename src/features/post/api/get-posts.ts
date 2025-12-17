@@ -1,9 +1,15 @@
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Post, Tag } from '../types';
 import { User } from '@/features/auth/types';
+import { mapUserFromBE } from '@/features/auth/api/get-user';
 
-// Định nghĩa Interface trả về từ Backend (Content Service)
-// Khớp với file services/content/.../dtos/responses/PostResponseDTO.java
+export interface GetPostsParams {
+  userId?: string;
+  status?: 'published' | 'draft' | 'scheduled';
+  q?: string;
+}
+
 interface PostDTO {
   id: string;
   title: string;
@@ -12,54 +18,58 @@ interface PostDTO {
   slug: string;
   thumbnail?: string;
   status: string;
-  userId: string; // Backend trả về userId
-  tags: Tag[];    // Backend trả về mảng object Tag
+  userId: string;
+  tags: Tag[];
   categoryId?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export const getPosts = async (): Promise<Post[]> => {
-  // 1. Gọi Content Service lấy danh sách bài viết
-  // Endpoint này dựa trên Content Controller
-  const response = await apiClient.get<PostDTO[]>('/content/posts'); 
+export const getPosts = async (params?: GetPostsParams): Promise<Post[]> => {
+  // 1. Gọi API Content Service
+  // Ép kiểu 'as any' ở đây để tránh lỗi TS nếu interceptor trả về data trực tiếp
+  const response = await apiClient.get<PostDTO[]>('/content/posts', {
+    params: params 
+  }) as any;
   
-  // Xử lý trường hợp response có thể được bọc trong object data (tùy interceptor)
-  const postsData = (response as any).data || response;
+  // Xử lý linh hoạt: Nếu interceptor đã trả data thì dùng luôn, nếu chưa thì lấy .data
+  const postsData = response.data || response;
 
   if (!Array.isArray(postsData)) {
-    console.error("API response is not an array", postsData);
     return [];
   }
 
-  // 2. Trích xuất danh sách userId duy nhất để tránh gọi trùng lặp
-  const uniqueUserIds = [...new Set(postsData.map((p) => p.userId))];
-
-  // 3. Gọi User Service để lấy thông tin chi tiết (Client-side Aggregation)
-  // Lưu ý: Nếu có API bulk get (/users?ids=...) thì tốt hơn, ở đây dùng Promise.all
+  // 2. Client-side Aggregation (Lấy thông tin User)
+  const uniqueUserIds = [...new Set(postsData.map((p: PostDTO) => p.userId))];
+  
   const userPromises = uniqueUserIds.map((id) => 
-    apiClient.get<User>(`/users/${id}`).catch(() => null) // Catch lỗi để 1 user lỗi không làm hỏng cả trang
+    apiClient.get(`/users/${id}`)
+      // [FIX LỖI QUAN TRỌNG] 
+      // Ép kiểu 'res as any' để TS biết đây là object user (đã qua interceptor), 
+      // không phải là AxiosResponse
+      .then((res) => res as any) 
+      .catch(() => null)
   );
   
-  const users = await Promise.all(userPromises);
+  const usersRaw = await Promise.all(userPromises);
   
-  // Tạo Map để tra cứu nhanh: userId -> User Object
+  // Map userId -> User Object
   const userMap = new Map();
-  users.forEach((user: any) => {
-    if (user && user.id) {
-      userMap.set(user.id, user);
+  usersRaw.forEach((u) => {
+    // [HẾT LỖI] Bây giờ 'u' là 'any', nên TS cho phép truy cập .id
+    if (u && u.id) {
+      userMap.set(u.id, mapUserFromBE(u));
     }
   });
 
-  // 4. Map dữ liệu DTO sang Domain Model của Frontend
-  return postsData.map((post) => {
+  // 3. Map dữ liệu về Frontend Model
+  return postsData.map((post: PostDTO) => {
     const author = userMap.get(post.userId) || {
       id: post.userId,
       username: 'unknown',
       displayName: 'Unknown User',
-      name: 'Unknown',
-      avatar: 'https://via.placeholder.com/150', // Avatar mặc định nếu không tìm thấy
-    };
+      avatar: '',
+    } as User;
 
     return {
       id: post.id,
@@ -67,17 +77,20 @@ export const getPosts = async (): Promise<Post[]> => {
       excerpt: post.excerpt || '',
       content: post.content,
       userId: post.userId,
-      author: author, // Đã ghép thông tin user
+      author: author,
       datePublished: post.createdAt,
       status: post.status as any,
       tags: post.tags || [],
       thumbnail: post.thumbnail,
-      readTime: 5, // Backend chưa tính, tạm để hardcode hoặc tính ở FE
-      stats: { // Engagement Service chưa tích hợp vào list, tạm để 0
-        likes: 0,
-        comments: 0,
-        views: 0,
-      },
+      readTime: 5, 
+      stats: { likes: 0, comments: 0, views: 0 },
     };
+  });
+};
+
+export const usePosts = (params?: GetPostsParams) => {
+  return useQuery({
+    queryKey: ['posts', params],
+    queryFn: () => getPosts(params),
   });
 };

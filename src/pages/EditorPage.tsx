@@ -8,8 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { User } from '@/features/auth/types';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-// [ĐÃ XÓA] import ThemeSelector 
-import { ThemeToggle } from '../components/ThemeToggle'; // [MỚI] Import nút đổi theme
+import { ThemeToggle } from '../components/ThemeToggle';
 import { themes } from '../themes'; 
 import { useTheme } from '../context/ThemeContext';
 import ChatBot from '../components/ChatBot';
@@ -20,7 +19,7 @@ interface EditorPageProps {
 
 export function EditorPage({ currentUser }: EditorPageProps) {
   const navigate = useNavigate();
-  const { themeId } = useTheme(); // Chỉ cần themeId, còn hàm set đã nằm trong ThemeToggle
+  const { themeId } = useTheme();
   const currentTheme = themes[themeId as keyof typeof themes] || themes.happy;
   
   const [title, setTitle] = useState('');
@@ -36,7 +35,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
     setWordCount(words);
   }, [content]);
 
-  // Auto Save Logic (Giả lập)
   const handleSaveDraft = () => {
     setIsSaving(true);
     setTimeout(() => setIsSaving(false), 800);
@@ -59,6 +57,9 @@ export function EditorPage({ currentUser }: EditorPageProps) {
     }, 1500);
   };
 
+  // [FIX] Lấy tên hiển thị an toàn
+  const authorName = currentUser.displayName || currentUser.username || 'User';
+
   return (
     <div 
       className="min-h-screen transition-all duration-700 ease-in-out bg-cover bg-center"
@@ -72,22 +73,19 @@ export function EditorPage({ currentUser }: EditorPageProps) {
       {/* --- HEADER --- */}
       <div className="sticky top-0 z-50 bg-white/40 backdrop-blur-xl supports-[backdrop-filter]:bg-white/40 transition-all duration-500 border-b border-white/10">
         <div className="flex justify-between items-center h-16 px-6 mx-auto w-full max-w-screen-xl">
-          {/* TRÁI: Back + Theme Toggle */}
           <div className="flex items-center gap-4">
              <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="hover:bg-black/5 rounded-full">
               <ArrowLeft className="h-6 w-6" style={{ color: currentTheme.text }} />
             </Button>
             
-            {/* [MỚI] Nút đổi theme ở đây, có vạch ngăn cách */}
             <div className="pl-4 border-l border-black/10">
                  <ThemeToggle 
                     className="hover:bg-black/5" 
-                    style={{ color: currentTheme.text }} // Truyền màu chữ động vào để icon đổi màu theo nền
+                    style={{ color: currentTheme.text }}
                  />
             </div>
           </div>
 
-          {/* PHẢI: Save status + Publish + Avatar */}
           <div className="flex items-center gap-4">
              <div className="hidden md:flex flex-col items-end mr-2">
                 <span className="text-xs font-bold opacity-70" style={{ color: currentTheme.text }}>
@@ -107,9 +105,11 @@ export function EditorPage({ currentUser }: EditorPageProps) {
             >
               Publish
             </Button>
+            
+            {/* [FIX] Sử dụng authorName thay vì name */}
             <Avatar className="h-9 w-9 border-2 border-white/50 shadow-sm cursor-pointer hover:rotate-6 transition-transform">
               <AvatarImage src={currentUser.avatar} />
-              <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+              <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
             </Avatar>
           </div>
         </div>
@@ -117,19 +117,11 @@ export function EditorPage({ currentUser }: EditorPageProps) {
 
       {/* --- EDITOR BODY --- */}
       <div className="max-w-[740px] mx-auto px-4 pb-32 mt-12">
-        
-        {/* [ĐÃ XÓA] Mobile Theme Selector (Vì nút trên Header đã đủ dùng cho cả mobile) */}
-
         <Input
           placeholder="Tiêu đề bài viết..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="
-            border-0 px-0 mb-4 
-            text-[42px] md:text-[54px] leading-[1.1] font-serif font-bold tracking-tight
-            placeholder:text-current placeholder:opacity-30
-            focus-visible:ring-0 bg-transparent shadow-none
-          "
+          className="border-0 px-0 mb-4 text-[42px] md:text-[54px] leading-[1.1] font-serif font-bold tracking-tight placeholder:text-current placeholder:opacity-30 focus-visible:ring-0 bg-transparent shadow-none"
           style={{ color: currentTheme.text }}
         />
 
@@ -137,12 +129,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
           placeholder="Mô tả ngắn (không bắt buộc)..."
           value={subtitle}
           onChange={(e) => setSubtitle(e.target.value)}
-          className="
-            border-0 px-0 mb-10 
-            text-xl md:text-2xl font-sans font-medium opacity-70
-            placeholder:text-current placeholder:opacity-50
-            focus-visible:ring-0 bg-transparent shadow-none
-          "
+          className="border-0 px-0 mb-10 text-xl md:text-2xl font-sans font-medium opacity-70 placeholder:text-current placeholder:opacity-50 focus-visible:ring-0 bg-transparent shadow-none"
           style={{ color: currentTheme.text }}
         />
 
@@ -156,7 +143,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
         </div>
       </div>
 
-      {/* FOOTER MODALS */}
       <PublishModal
         open={showPublishModal}
         onClose={() => setShowPublishModal(false)}
