@@ -1,5 +1,13 @@
 import { User } from '../auth/types';
 
+// [MỚI] Định nghĩa interface Tag khớp với TagResponseDTO của Backend
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+}
+
 export interface PostStats {
   likes: number;
   comments: number;
@@ -10,21 +18,32 @@ export interface Post {
   id: string;
   title: string;
   excerpt: string;
-  contentHTML: string;
-  authorId: string;
-  author?: User;
-  datePublished: string;
+  
+  // [SỬA 1] Đồng nhất tên gọi là 'content' (Backend Entity: content)
+  content: string; 
+  
+  // [SỬA 2] Backend trả về 'userId', không trả về 'authorId' hay object 'author'
+  userId: string; 
+  
+  // Trường này sẽ được Frontend tự điền sau khi gọi User Service (Optional)
+  author?: User; 
+
+  // [SỬA 3] Backend trả về mảng object Tag, không phải string[]
+  tags: Tag[]; 
+  
+  datePublished: string; // Backend trả về createdAt/updatedAt, cần map sang
   status: 'draft' | 'published' | 'unlisted' | 'scheduled';
-  tags: string[];
   readTime: number;
   stats: PostStats;
   thumbnail?: string;
+  coverImage?: string; // Nếu BE có trường này
   series?: string;
   
-  // [MỚI] Thêm các trường trạng thái từ API
+  // Các trường trạng thái từ API tương tác (nếu có)
   isLiked?: boolean;
   isSaved?: boolean;
 }
+
 
 export interface Comment {
   id: string;
