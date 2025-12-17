@@ -4,6 +4,8 @@ import { Post, Comment } from '@/features/post/types';
 export const mockUsers: User[] = [
   {
     id: '1',
+    username: 'sarah_c',
+    displayName: 'Sarah Chen',
     name: 'Sarah Chen',
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop',
     bio: 'Tech writer, software engineer, and coffee enthusiast. Sharing insights on web development and design.',
@@ -13,6 +15,8 @@ export const mockUsers: User[] = [
   },
   {
     id: '2',
+    username: 'alex_r',
+    displayName: 'Alex Rivera',
     name: 'Alex Rivera',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
     bio: 'UI/UX Designer crafting beautiful digital experiences. Passionate about accessibility and user research.',
@@ -22,6 +26,8 @@ export const mockUsers: User[] = [
   },
   {
     id: '3',
+    username: 'minh_n',
+    displayName: 'Minh Nguyen',
     name: 'Minh Nguyen',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Minh',
     bio: 'Full-stack developer. Open source contributor. Building the future of web.',
@@ -31,6 +37,8 @@ export const mockUsers: User[] = [
   },
   {
     id: '4',
+    username: 'emma_t',
+    displayName: 'Emma Thompson',
     name: 'Emma Thompson',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
     bio: 'Product designer with a love for minimalism and thoughtful interfaces.',
@@ -42,6 +50,8 @@ export const mockUsers: User[] = [
 
 export const currentUser: User = {
   id: 'current-user',
+  username: 'thanhhuy',
+  displayName: 'Thanh Huy',
   name: 'You',
   avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=CurrentUser',
   bio: 'Passionate writer and learner',
@@ -54,6 +64,7 @@ export const mockPosts: Post[] = [
     id: '1',
     title: 'The Future of Web Development: What to Expect in 2025',
     excerpt: 'As we move deeper into 2025, the web development landscape continues to evolve at a breakneck pace. From AI-powered development tools to the rise of edge computing...',
+    // [SỬA] Đổi 'content' thành 'contentHTML' để khớp với interface Post
     contentHTML: `
       <p>As we move deeper into 2025, the web development landscape continues to evolve at a breakneck pace. From AI-powered development tools to the rise of edge computing, developers are witnessing a transformation that's reshaping how we build for the web.</p>
       
@@ -82,6 +93,7 @@ export const mockPosts: Post[] = [
     id: '2',
     title: 'Designing for Accessibility: A Complete Guide',
     excerpt: 'Accessibility isn\'t just a nice-to-have feature—it\'s essential for creating inclusive digital experiences. Learn how to design and build products that work for everyone...',
+    // [SỬA] Đổi 'content' thành 'contentHTML'
     contentHTML: `
       <p>Accessibility isn't just a nice-to-have feature—it's essential for creating inclusive digital experiences. In this guide, we'll explore practical strategies for making your designs accessible to all users.</p>
       
@@ -230,36 +242,6 @@ export const mockComments: Comment[] = [
   },
 ];
 
-// export const mockNotifications: Notification[] = [
-//   {
-//     id: 'n1',
-//     type: 'like',
-//     message: 'Sarah Chen liked your post "Building Scalable React Applications"',
-//     read: false,
-//     date: '2025-11-08T08:30:00Z',
-//     userId: '1',
-//     postId: '3',
-//   },
-//   {
-//     id: 'n2',
-//     type: 'comment',
-//     message: 'Alex Rivera commented on your post',
-//     read: false,
-//     date: '2025-11-08T07:15:00Z',
-//     userId: '2',
-//     postId: '1',
-//   },
-//   {
-//     id: 'n3',
-//     type: 'follow',
-//     message: 'Emma Thompson started following you',
-//     read: true,
-//     date: '2025-11-07T18:45:00Z',
-//     userId: '4',
-//   },
-// ];
-
-// Helper functions
 export function getPostById(id: string): Post | undefined {
   return mockPosts.find(post => post.id === id);
 }
@@ -275,7 +257,3 @@ export function getUserById(id: string): User | undefined {
 export function getPostsByAuthor(authorId: string): Post[] {
   return mockPosts.filter(post => post.authorId === authorId);
 }
-
-// export function getUnreadNotificationsCount(): number {
-//   return mockNotifications.filter(n => !n.read).length;
-// }

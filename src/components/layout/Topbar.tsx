@@ -51,22 +51,27 @@ export function Topbar({
   };
 
   return (
-    // THAY ĐỔI Ở ĐÂY:
-    // 1. Xóa 'border-b border-border/40' (viền mặc định)
-    // 2. Thêm 'rounded-theme-b' (Bo 2 góc dưới)
-    // 3. Thêm 'border-b-theme border-theme' (Viền đáy kiểm soát bởi biến theme)
-    // 4. Thêm 'shadow-theme' (Topbar cũng đổ bóng theo theme)
     <header className="
       sticky top-0 z-50 w-full 
       bg-background/80 
-      backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 
-      transition-all duration-300
+      backdrop-blur-theme
+      supports-[backdrop-filter]:bg-background/60 
+      
+      /* Shape & Border */
       rounded-theme-b
       border-b-[length:var(--border-width-theme)] border-theme
-      shadow-theme
-      mb-6
+      
+      /* Shadow */
+      drop-shadow-theme
+      
+      /* Spacing */
+      mb-6 
+      transition-all duration-300
     ">
-      <div className="flex h-16 items-center gap-4 px-4 md:px-6">
+      {/* THÊM: w-full và justify-between vào đây để dàn trải nội dung */}
+      <div className="flex h-16 items-center justify-between w-full px-4 md:px-6">
+        
+        {/* CỤM TRÁI: Logo & Menu */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="lg:hidden">
             <Menu className="h-5 w-5" />
@@ -77,13 +82,13 @@ export function Topbar({
           </button>
         </div>
 
-        <div className="flex-1 max-w-md mx-auto">
+        {/* CỤM GIỮA: Search (Giữ mx-auto để nó cố gắng căn giữa trong không gian còn lại) */}
+        <div className="flex-1 max-w-md mx-4 hidden md:block">
            <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search..."
-              // Thêm rounded-theme vào ô input để nó đồng bộ với theme
               className="pl-9 bg-muted/50 border-transparent focus:bg-background transition-all rounded-theme"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
@@ -91,6 +96,7 @@ export function Topbar({
           </div>
         </div>
 
+        {/* CỤM PHẢI: Actions */}
         <div className="flex items-center gap-2">
           
           <Button 
@@ -109,7 +115,6 @@ export function Topbar({
                 <LogIn className="h-4 w-4" />
                 <span className="hidden sm:inline">Đăng nhập</span>
               </Button>
-              
               <Button variant="ghost" size="sm" className="gap-2 rounded-theme" onClick={() => auth.signinRedirect({ prompt: 'create', extraQueryParams: { kc_action: 'register' } })}>
                 <UserPlus className="h-4 w-4" />
                 <span className="hidden sm:inline">Đăng ký</span>
@@ -140,8 +145,9 @@ export function Topbar({
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-theme border-theme">
-                  <div className="flex items-center justify-start gap-2 p-2 font-medium text-sm">
+                <DropdownMenuContent align="end" className="w-56 rounded-theme border-theme shadow-theme">
+                   {/* ...Menu content giữ nguyên... */}
+                   <div className="flex items-center justify-start gap-2 p-2 font-medium text-sm">
                     <span className="truncate">{displayName}</span>
                   </div>
                   <DropdownMenuSeparator />

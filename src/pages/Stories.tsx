@@ -30,8 +30,9 @@ export function Stories() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="mb-2 text-2xl font-bold">Your Stories</h1>
-          <p className="text-gray-600">Manage your published stories and drafts</p>
+          <h1 className="mb-2 text-2xl font-bold text-foreground">Your Stories</h1>
+          {/* [SỬA] Đổi text-gray-600 -> text-muted-foreground */}
+          <p className="text-muted-foreground">Manage your published stories and drafts</p>
         </div>
         <Button onClick={() => navigate('/editor')}>
           <FileText className="h-4 w-4 mr-2" />
@@ -85,7 +86,7 @@ export function Stories() {
   );
 }
 
-// Component con giữ nguyên logic hiển thị, chỉ đảm bảo type Post đúng
+// Component con
 function StoryItem({ story }: { story: Post }) {
   const navigate = useNavigate();
   const formattedDate = new Date(story.datePublished || Date.now()).toLocaleDateString('en-US', {
@@ -93,15 +94,34 @@ function StoryItem({ story }: { story: Post }) {
   });
 
   return (
-    <div className="flex gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+    <div 
+      className="
+        flex gap-4 p-4 
+        rounded-lg border border-theme
+        
+        /* [SỬA QUAN TRỌNG] */
+        /* 1. Thêm màu nền mặc định (biến đổi theo theme) */
+        bg-[var(--story-item-bg)]
+        
+        /* 2. Màu nền khi hover (biến đổi theo theme) */
+        hover:bg-[var(--hover-item-bg)]
+        
+        /* 3. Hiệu ứng mờ để chữ rõ hơn trên nền ảnh */
+        backdrop-blur-sm
+        
+        transition-colors cursor-pointer
+      "
+      onClick={() => navigate(`/editor?id=${story.id}`)}
+    >
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-4 mb-2">
-          <h3 className="font-semibold line-clamp-2 cursor-pointer hover:underline" onClick={() => navigate(`/post/${story.id}`)}>
+          <h3 className="font-semibold line-clamp-2 cursor-pointer hover:underline text-foreground">
             {story.title || "Untitled Draft"}
           </h3>
           {story.status === 'draft' && <Badge variant="secondary">Draft</Badge>}
         </div>
-        <div className="flex items-center gap-4 text-sm text-gray-500">
+        {/* [SỬA] Đổi text-gray-500 -> text-muted-foreground */}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>{formattedDate}</span>
           {story.status === 'published' && (
             <>
@@ -112,12 +132,12 @@ function StoryItem({ story }: { story: Post }) {
         </div>
       </div>
       <div className="flex items-start gap-2">
-        <Button variant="outline" size="sm" onClick={() => navigate(`/editor?id=${story.id}`)}>
+        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor?id=${story.id}`) }}>
           <Edit className="h-4 w-4 mr-2" /> Edit
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" onClick={(e) => e.stopPropagation()}><MoreVertical className="h-4 w-4" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem className="text-red-600"><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
@@ -131,9 +151,10 @@ function StoryItem({ story }: { story: Post }) {
 function EmptyState({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <FileText className="h-12 w-12 text-gray-300 mb-4" />
-      <h3 className="mb-2 font-medium">{title}</h3>
-      <p className="text-gray-500 mb-6">{description}</p>
+      {/* Cũng đổi màu icon placeholder */}
+      <FileText className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+      <h3 className="mb-2 font-medium text-foreground">{title}</h3>
+      <p className="text-muted-foreground mb-6">{description}</p>
       {action}
     </div>
   );

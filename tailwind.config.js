@@ -6,27 +6,26 @@ export default {
   ],
   theme: {
     extend: {
-      // 1. Map Border Radius
       borderRadius: {
-        'theme': 'var(--radius-theme)', // Class: rounded-theme
-        'theme-t': 'var(--radius-theme) var(--radius-theme) 0 0', // Class: rounded-theme-t
-        'theme-b': '0 0 var(--radius-theme) var(--radius-theme)', // Class: rounded-theme-b
+        'theme': 'var(--radius-theme)',
+        'theme-t': 'var(--radius-theme) var(--radius-theme) 0 0',
+        'theme-b': '0 0 var(--radius-theme) var(--radius-theme)',
       },
-      // 2. Map Border Width
       borderWidth: {
-        'theme': 'var(--border-width-theme)', // Class: border-theme
+        'theme': 'var(--border-width-theme)',
       },
-      // 3. Map Border Color (Thêm màu viền theme)
       borderColor: {
-        'theme': 'var(--border-color-theme)', // Class: border-theme
+        'theme': 'var(--border-color-theme)',
       },
-      // 4. Map Box Shadow
-      boxShadow: {
-        'theme': 'var(--shadow-theme)', // Class: shadow-theme
+      // Dùng dropShadow thay vì boxShadow để tương thích tốt với clip-path và kính mờ
+      dropShadow: {
+        'theme': 'var(--card-filter)', 
       },
-      // 5. Map Backdrop Blur (Dùng arbitrary value trong code cũng được, nhưng map thì gọn hơn)
+      backgroundImage: {
+        'theme-pattern': 'var(--bg-pattern)',
+      },
       backdropBlur: {
-        'theme': 'var(--backdrop-blur-theme)', // Class: backdrop-blur-theme
+        'theme': 'var(--backdrop-blur-theme)',
       }
     },
   },

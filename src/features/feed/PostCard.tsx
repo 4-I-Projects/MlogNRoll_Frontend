@@ -17,24 +17,24 @@ export function PostCard({ post, onClick }: PostCardProps) {
   });
 
   return (
-    // THAY ĐỔI Ở ĐÂY:
-    // 1. Xóa 'border-b', 'hover:bg-gray-50/50' (các style cũ)
-    // 2. Thêm các class theme semantic:
-    //    - rounded-theme: Bo góc theo mood
-    //    - border-theme border-theme: Viền và độ dày theo mood
-    //    - shadow-theme: Bóng đổ theo mood
-    //    - bg-card: Màu nền card (đã có độ trong suốt định nghĩa ở globals.css)
-    //    - backdrop-blur-theme: Hiệu ứng kính cho theme Sad
     <article className="
-      group cursor-pointer 
-      py-6 px-5 mb-4 
-      bg-card 
-      rounded-theme 
-      border-theme border-theme 
-      shadow-theme 
-      backdrop-blur-theme
-      transition-all duration-300 hover:-translate-y-1
-    ">
+        group cursor-pointer 
+        /* Padding và Margin để tránh bị cắt mất nội dung */
+        p-6 mb-8 
+        
+        /* Sử dụng các biến Theme */
+        bg-card 
+        rounded-theme 
+        border-theme border-theme 
+        
+        /* Hiệu ứng bóng đổ và mờ */
+        drop-shadow-theme 
+        backdrop-blur-theme
+        
+        transition-all duration-300 hover:-translate-y-1
+      "
+      // Inject clip-path trực tiếp vào style (vì Tailwind không có class clip-path native đủ mạnh)
+      style={{ clipPath: 'var(--clip-path-style)' }}>
       <div className="flex gap-4">
         <div className="flex-1 min-w-0" onClick={onClick}>
           {/* Author info */}
@@ -64,9 +64,9 @@ export function PostCard({ post, onClick }: PostCardProps) {
 
             {/* Stats & Actions */}
             <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="gap-1 h-8 hover:bg-primary/10 hover:text-primary rounded-full"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -74,10 +74,10 @@ export function PostCard({ post, onClick }: PostCardProps) {
               >
                 <Heart className="h-4 w-4" />
               </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
+
+              <Button
+                variant="ghost"
+                size="sm"
                 className="gap-1 h-8 hover:bg-primary/10 hover:text-primary rounded-full"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -85,10 +85,10 @@ export function PostCard({ post, onClick }: PostCardProps) {
               >
                 <MessageCircle className="h-4 w-4" />
               </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
+
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-8 w-8 hover:bg-primary/10 hover:text-primary rounded-full"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -103,7 +103,7 @@ export function PostCard({ post, onClick }: PostCardProps) {
         {/* Thumbnail */}
         {post.thumbnail && (
           <div className="w-28 h-28 flex-shrink-0" onClick={onClick}>
-            {/* Thêm rounded-theme vào ảnh để nó khớp với card */}
+            {/* Bo góc cho ảnh theo theme luôn */}
             <div className="w-full h-full overflow-hidden rounded-[calc(var(--radius-theme)-4px)]">
                <ImageWithFallback
                 src={post.thumbnail}

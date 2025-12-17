@@ -5,30 +5,37 @@
 :root {
   /* --- BASE SIZE & RADIUS --- */
   --font-size: 16px;
-  /* Mặc định cho Happy (Vui vẻ) */
-  --radius-theme: 1.5rem; /* 24px - Bo tròn nhiều */
+  
+  /* --- DEFAULT (HAPPY THEME) --- */
+  --radius-theme: 1.5rem;
   --border-width-theme: 0px;
   --border-color-theme: transparent;
-  --shadow-theme: 0 10px 25px -5px rgba(255, 140, 0, 0.3); /* Bóng cam mềm */
-  --backdrop-blur-theme: 0px;
-  /* Pattern: Chấm bi mờ cho vui vẻ */
-  --bg-pattern: radial-gradient(#FFD700 1px, transparent 1px);
-  --bg-pattern-size: 20px 20px;
+  --shadow-theme: 0 10px 40px -10px rgba(255, 140, 0, 0.5);
+  --backdrop-blur-theme: 12px;
   
-  /* Các biến màu gốc của bạn giữ nguyên */
-  --theme-gradient: linear-gradient(135deg, #FFF7D1 0%, #FFD700 100%);
-  --background: #ffffff;
+  /* [MỚI] Background cho Story Item: Trắng mờ */
+  --story-item-bg: rgba(255, 255, 255, 0.6);
+  /* Hover: Đậm hơn một chút */
+  --hover-item-bg: rgba(255, 255, 255, 0.9);
+
+  --bg-pattern: url('/happy-bg.jpg');
+  --bg-pattern-size: cover;
+  
+  --theme-gradient: linear-gradient(135deg, rgba(255, 247, 209, 0.6) 0%, rgba(255, 215, 0, 0.4) 100%);
+  --background: #FFF7D1;
   --foreground: #5D4037;
-  --card: #ffffff;
-  --card-foreground: #5D4037;
-  --popover: #ffffff;
-  --popover-foreground: #5D4037;
+  --card: rgba(255, 255, 255, 0.75);
+  
+  --sidebar: rgba(255, 255, 255, 0.6);
+  --sidebar-border: transparent; 
+
+  /* Các biến màu gốc */
   --primary: #FF8C00;
   --primary-foreground: #ffffff;
   --secondary: #FFF7D1;
   --secondary-foreground: #FF8C00;
   --muted: #ececf0;
-  --muted-foreground: #717182;
+  --muted-foreground: #717182; /* Màu chữ phụ (Dark Gray) */
   --accent: #FFD700;
   --accent-foreground: #5D4037;
   --destructive: #d4183d;
@@ -37,134 +44,159 @@
   --input: transparent;
   --input-background: rgba(255, 255, 255, 0.5);
   --ring: #FF8C00;
-  --sidebar: rgba(255, 255, 255, 0.8);
-  --sidebar-foreground: #5D4037;
 }
 
 /* --- THEME OVERRIDES --- */
 
-/* 1. SAD THEME (Buồn) - Kính mờ, Mong manh */
+/* 1. SAD THEME */
 [data-theme="sad"] {
-  --radius-theme: 0.5rem; /* 8px - Bo nhẹ */
+  --radius-theme: 0.75rem;
   --border-width-theme: 1px;
-  --border-color-theme: rgba(255, 255, 255, 0.3);
-  --shadow-theme: none; /* Không bóng, phẳng */
-  --backdrop-blur-theme: 12px; /* Hiệu ứng kính */
+  --border-color-theme: rgba(255, 255, 255, 0.4);
+  --shadow-theme: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --backdrop-blur-theme: 20px;
   
-  /* Pattern: Giọt mưa (Gradient dọc mờ) */
-  --bg-pattern: linear-gradient(to bottom, rgba(255,255,255,0.4) 1px, transparent 1px);
-  --bg-pattern-size: 100% 40px;
-
-  /* Màu cũ */
-  --theme-gradient: linear-gradient(135deg, #E0E6F8 0%, #8999C2 100%);
-  --background: #E0E6F8;
-  --foreground: #1F2D3D;
-  --primary: #2C3E50;
-  --primary-foreground: #ffffff;
-  --card: rgba(255, 255, 255, 0.4); /* Trong suốt hơn để thấy kính */
-  --card-foreground: #1F2D3D;
-  --muted: #8999C2;
-  --muted-foreground: #4A5568;
-  --accent: #B0C4DE;
-  --accent-foreground: #1F2D3D;
-  --ring: #2C3E50;
+  /* [MỚI] Story Item: Tối mờ để chữ trắng nổi bật */
+  --story-item-bg: rgba(30, 41, 59, 0.4);
+  --hover-item-bg: rgba(30, 41, 59, 0.7);
+  
+  --bg-pattern: url('/sad-bg.jpg');
+  --bg-pattern-size: cover;
+  --theme-gradient: linear-gradient(to bottom, rgba(31, 45, 61, 0.7), rgba(31, 45, 61, 0.8));
+  
+  --background: #1F2D3D;
+  --foreground: #F1F5F9;
+  --card: rgba(30, 41, 59, 0.6);
+  
+  --sidebar: rgba(30, 41, 59, 0.6);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  
+  --primary: #94A3B8;
+  --primary-foreground: #0F172A;
+  --muted-foreground: #cbd5e1; /* Màu chữ phụ sáng hơn (Slate 300) */
+  --ring: #94A3B8;
+  --clip-path-style: none;
 }
 
-/* 2. ANGRY THEME (Giận dữ) - Góc cạnh, Thô ráp */
+/* 2. ANGRY THEME */
 [data-theme="angry"] {
-  --radius-theme: 0px; /* Vuông vức, không bo */
+  --radius-theme: 0px;
   --border-width-theme: 2px;
   --border-color-theme: #470000;
-  --shadow-theme: 6px 6px 0px 0px #470000; /* Bóng cứng solid, lệch góc */
+  --shadow-theme: 8px 8px 0px 0px #470000;
   --backdrop-blur-theme: 0px;
+
+  /* [MỚI] Story Item: Nền đen mờ (để chữ Trắng đọc được trên nền Lửa) */
+  --story-item-bg: rgba(0, 0, 0, 0.6);
+  --hover-item-bg: rgba(71, 0, 0, 0.8); /* Hover đỏ đen đậm */
+
+  --bg-pattern: url('/angry-bg.jpg');
+  --bg-pattern-size: cover;
+  --theme-gradient: linear-gradient(to bottom, rgba(255, 0, 0, 0.2), rgba(0, 0, 0, 0.6));
   
-  /* Pattern: Sọc chéo cảnh báo (Noise/Grunge) */
-  --bg-pattern: repeating-linear-gradient(45deg, #ffcccc 0, #ffcccc 1px, transparent 0, transparent 50%);
-  --bg-pattern-size: 10px 10px;
-
-  /* Màu cũ */
-  --theme-gradient: linear-gradient(135deg, #FFE5E5 0%, #FF4D4D 100%);
-  --background: #FFE5E5;
-  --foreground: #470000;
-  --primary: #990000;
-  --primary-foreground: #ffffff;
-  --card: #ffffff; /* Card đặc để tạo tương phản mạnh */
+  --background: #1a0505;
+  --foreground: #FFFFFF;
+  --card: #ffffff; 
   --card-foreground: #470000;
-  --muted: #FFCCCB;
-  --muted-foreground: #800000;
-  --accent: #FF0000;
-  --accent-foreground: #ffffff;
-  --ring: #990000;
-}
 
-/* 3. TIRED THEME (Mệt mỏi) - Nhạt nhòa, Phẳng */
-[data-theme="tired"] {
-  --radius-theme: 0.25rem; /* 4px - Hơi vuông */
-  --border-width-theme: 1px;
-  --border-color-theme: #D1D5DB;
-  --shadow-theme: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Bóng rất nhẹ */
-  --backdrop-blur-theme: 0px;
-  --bg-pattern: none; /* Không họa tiết */
-  --bg-pattern-size: auto;
+  --sidebar: rgba(20, 0, 0, 0.7);
+  --sidebar-border: #470000;
 
-  /* Màu cũ */
-  --theme-gradient: linear-gradient(135deg, #F3F4F6 0%, #D1D5DB 100%);
-  --background: #F3F4F6;
-  --foreground: #4B5563;
-  --primary: #6B7280;
+  --primary: #FF4500;
   --primary-foreground: #ffffff;
-  --card: rgba(255, 255, 255, 0.8);
-  --card-foreground: #4B5563;
-  --muted: #E5E7EB;
-  --muted-foreground: #9CA3AF;
-  --accent: #D1D5DB;
-  --accent-foreground: #374151;
-  --ring: #6B7280;
+  --muted-foreground: #ffcccc; /* Màu chữ phụ hồng nhạt */
+  --ring: #FF4500;
+  
+  --clip-path-style: polygon(0% 0%, 100% 0%, 100% 85%, 95% 92%, 90% 85%, 85% 95%, 80% 85%, 75% 95%, 70% 85%, 60% 95%, 50% 85%, 40% 95%, 30% 85%, 20% 95%, 10% 85%, 0% 100%);
 }
 
-/* 4. ROMANTIC THEME (Lãng mạn) - Mềm mại, Bay bổng */
+/* 3. TIRED THEME */
+[data-theme="tired"] {
+  --radius-theme: 0.2rem;
+  --border-width-theme: 1px;
+  --border-color-theme: rgba(255, 255, 255, 0.2);
+  --shadow-theme: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --backdrop-blur-theme: 6px;
+
+  /* [MỚI] Story Item: Nền xám tối mờ */
+  --story-item-bg: rgba(31, 41, 55, 0.6);
+  --hover-item-bg: rgba(31, 41, 55, 0.9);
+
+  --bg-pattern: url('/tired-bg.jpg');
+  --bg-pattern-size: cover;
+  --theme-gradient: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(50, 50, 50, 0.8));
+  
+  --background: #1f2937;
+  --foreground: #f9fafb;
+  --card: rgba(31, 41, 55, 0.85);
+
+  --sidebar: rgba(31, 41, 55, 0.9);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+
+  --primary: #9ca3af; 
+  --primary-foreground: #111827;
+  --muted-foreground: #9ca3af; /* Màu chữ phụ xám sáng */
+  --ring: #4b5563;
+  --clip-path-style: none;
+}
+
+/* 4. ROMANTIC THEME */
 [data-theme="romantic"] {
-  --radius-theme: 2rem 0.5rem 2rem 0.5rem; /* Hình dáng lá thư/cánh hoa */
+  --radius-theme: 2rem 0.2rem 2rem 0.2rem;
   --border-width-theme: 0px;
   --border-color-theme: transparent;
-  --shadow-theme: 0 10px 30px -10px rgba(225, 29, 72, 0.4); /* Bóng hồng lan tỏa */
-  --backdrop-blur-theme: 4px;
-  
-  /* Pattern: Giấy cũ / Lưới mờ */
-  --bg-pattern: radial-gradient(circle, #FECDD3 1px, transparent 1px);
-  --bg-pattern-size: 15px 15px;
+  --shadow-theme: 0 20px 50px -10px rgba(225, 29, 72, 0.35);
+  --backdrop-blur-theme: 5px;
 
-  /* Màu cũ */
-  --theme-gradient: linear-gradient(135deg, #FFF1F2 0%, #FECDD3 100%);
+  /* [MỚI] Story Item: Trắng hồng mờ */
+  --story-item-bg: rgba(255, 255, 255, 0.6);
+  --hover-item-bg: rgba(255, 241, 242, 0.9);
+
+  --bg-pattern: url('/romantic-bg.jpg');
+  --bg-pattern-size: cover;
+  --theme-gradient: linear-gradient(135deg, rgba(255, 241, 242, 0.7), rgba(254, 205, 211, 0.5));
+
   --background: #FFF1F2;
   --foreground: #881337;
+  --card: rgba(255, 255, 255, 0.85);
+
+  --sidebar: rgba(255, 241, 242, 0.6);
+  --sidebar-border: transparent;
+
   --primary: #E11D48;
   --primary-foreground: #ffffff;
-  --card: rgba(255, 255, 255, 0.7);
-  --card-foreground: #881337;
-  --muted: #FCE7F3;
-  --muted-foreground: #BE185D;
-  --accent: #FDA4AF;
-  --accent-foreground: #881337;
+  --muted-foreground: #BE185D; /* Màu chữ phụ đỏ đậm */
   --ring: #E11D48;
+  --clip-path-style: none;
 }
 
 /* 5. HAPPY THEME (Redefine) */
 [data-theme="happy"] {
-  /* Kế thừa mặc định :root nhưng ghi lại để chắc chắn */
   --radius-theme: 1.5rem;
   --border-width-theme: 0px;
-  --shadow-theme: 0 10px 25px -5px rgba(255, 140, 0, 0.3);
-  --bg-pattern: radial-gradient(#FFD700 1px, transparent 1px);
+  --shadow-theme: 0 10px 40px -10px rgba(255, 140, 0, 0.5);
+  --backdrop-blur-theme: 12px;
   
-  /* Màu cũ */
-  --theme-gradient: linear-gradient(135deg, #FFF7D1 0%, #FFD700 100%);
+  /* Story Item: Trắng mờ */
+  --story-item-bg: rgba(255, 255, 255, 0.6);
+  --hover-item-bg: rgba(255, 255, 255, 0.9);
+
+  --bg-pattern: url('/happy-bg.jpg');
+  --bg-pattern-size: cover;
+  --theme-gradient: linear-gradient(135deg, rgba(255, 247, 209, 0.6) 0%, rgba(255, 215, 0, 0.4) 100%);
+  
   --background: #FFF7D1;
   --foreground: #5D4037;
+  --card: rgba(255, 255, 255, 0.75);
+
+  --sidebar: rgba(255, 255, 255, 0.6);
+  --sidebar-border: transparent;
+
   --primary: #FF8C00;
   --primary-foreground: #ffffff;
-  --card: rgba(255, 255, 255, 0.85);
+  --muted-foreground: #717182;
   --ring: #FF8C00;
+  --clip-path-style: none;
 }
 
 @layer base {
@@ -172,15 +204,64 @@
     border-color: var(--border);
     outline-color: var(--ring);
   }
-
   body {
-    background: var(--theme-gradient);
-    /* Áp dụng pattern lên body */
     background-image: var(--bg-pattern), var(--theme-gradient);
     background-size: var(--bg-pattern-size), cover;
     background-attachment: fixed;
+    background-position: center;
     color: var(--foreground);
     min-height: 100vh;
     transition: background 0.5s ease, color 0.5s ease;
   }
+}
+
+
+/* Tiptap Editor Styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Định dạng các thẻ HTML bên trong Editor */
+.ProseMirror h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid #ccc;
+  padding-left: 1rem;
+  font-style: italic;
+  margin: 1rem 0;
+  opacity: 0.8;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.ProseMirror code {
+  background-color: rgba(0,0,0,0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
 }
