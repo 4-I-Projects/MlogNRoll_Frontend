@@ -1,14 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { TiptapEditor } from '../features/editor/components/TiptapEditor'; // Dùng Tiptap thay Textarea
+import { TiptapEditor } from '../features/editor/components/TiptapEditor';
 import { PublishModal, PublishSettings } from '../features/editor/components/PublishModal';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { User } from '@/features/auth/types';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import ThemeSelector from '../components/ThemeSelector';
+// [ĐÃ XÓA] import ThemeSelector 
+import { ThemeToggle } from '../components/ThemeToggle'; // [MỚI] Import nút đổi theme
 import { themes } from '../themes'; 
 import { useTheme } from '../context/ThemeContext';
 import ChatBot from '../components/ChatBot';
@@ -19,7 +20,7 @@ interface EditorPageProps {
 
 export function EditorPage({ currentUser }: EditorPageProps) {
   const navigate = useNavigate();
-  const { themeId, setThemeId } = useTheme();
+  const { themeId } = useTheme(); // Chỉ cần themeId, còn hàm set đã nằm trong ThemeToggle
   const currentTheme = themes[themeId as keyof typeof themes] || themes.happy;
   
   const [title, setTitle] = useState('');
@@ -29,16 +30,33 @@ export function EditorPage({ currentUser }: EditorPageProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [wordCount, setWordCount] = useState(0);
 
-  // Logic đếm từ cho HTML content
   useEffect(() => {
     const text = content.replace(/<[^>]*>/g, ''); 
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     setWordCount(words);
   }, [content]);
 
-  // ... Giữ nguyên logic Auto Save & Publish ...
+  // Auto Save Logic (Giả lập)
+  const handleSaveDraft = () => {
+    setIsSaving(true);
+    setTimeout(() => setIsSaving(false), 800);
+  };
+
+  useEffect(() => {
+    if (!title && !content) return;
+    const timer = setTimeout(() => handleSaveDraft(), 5000);
+    return () => clearTimeout(timer);
+  }, [title, subtitle, content, themeId]);
+
   const handlePublish = (settings: PublishSettings) => {
-      // ... logic cũ
+    setIsSaving(true);
+    console.log('Publishing:', settings);
+    setTimeout(() => {
+      setIsSaving(false);
+      toast.success('Published successfully!');
+      setShowPublishModal(false);
+      navigate('/stories');
+    }, 1500);
   };
 
   return (
@@ -54,25 +72,29 @@ export function EditorPage({ currentUser }: EditorPageProps) {
       {/* --- HEADER --- */}
       <div className="sticky top-0 z-50 bg-white/40 backdrop-blur-xl supports-[backdrop-filter]:bg-white/40 transition-all duration-500 border-b border-white/10">
         <div className="flex justify-between items-center h-16 px-6 mx-auto w-full max-w-screen-xl">
-          {/* TRÁI */}
+          {/* TRÁI: Back + Theme Toggle */}
           <div className="flex items-center gap-4">
              <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="hover:bg-black/5 rounded-full">
               <ArrowLeft className="h-6 w-6" style={{ color: currentTheme.text }} />
             </Button>
-            {/* Hiển thị Mood Picker ngay trên Header cho gọn */}
-            <div className="hidden md:block pl-4 border-l border-black/10">
-                 <ThemeSelector currentThemeId={themeId} onSelect={setThemeId} />
+            
+            {/* [MỚI] Nút đổi theme ở đây, có vạch ngăn cách */}
+            <div className="pl-4 border-l border-black/10">
+                 <ThemeToggle 
+                    className="hover:bg-black/5" 
+                    style={{ color: currentTheme.text }} // Truyền màu chữ động vào để icon đổi màu theo nền
+                 />
             </div>
           </div>
 
-          {/* PHẢI */}
+          {/* PHẢI: Save status + Publish + Avatar */}
           <div className="flex items-center gap-4">
              <div className="hidden md:flex flex-col items-end mr-2">
                 <span className="text-xs font-bold opacity-70" style={{ color: currentTheme.text }}>
-                    {isSaving ? 'Đang lưu...' : 'Đã lưu'}
+                    {isSaving ? 'Saving...' : 'Saved'}
                 </span>
                 <span className="text-[10px] opacity-50" style={{ color: currentTheme.text }}>
-                    {wordCount} từ
+                    {wordCount} words
                 </span>
              </div>
 
@@ -83,7 +105,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
               style={{ backgroundColor: currentTheme.accent, color: '#fff' }}
               disabled={!title}
             >
-              Xuất bản
+              Publish
             </Button>
             <Avatar className="h-9 w-9 border-2 border-white/50 shadow-sm cursor-pointer hover:rotate-6 transition-transform">
               <AvatarImage src={currentUser.avatar} />
@@ -94,17 +116,10 @@ export function EditorPage({ currentUser }: EditorPageProps) {
       </div>
 
       {/* --- EDITOR BODY --- */}
-      {/* Căn giữa, giới hạn chiều rộng 740px chuẩn blog */}
       <div className="max-w-[740px] mx-auto px-4 pb-32 mt-12">
         
-        {/* Mobile Theme Selector (Chỉ hiện ở mobile) */}
-        <div className="md:hidden mb-6 flex justify-center">
-            <div className="p-2 bg-white/20 backdrop-blur-md rounded-full">
-                 <ThemeSelector currentThemeId={themeId} onSelect={setThemeId} />
-            </div>
-        </div>
+        {/* [ĐÃ XÓA] Mobile Theme Selector (Vì nút trên Header đã đủ dùng cho cả mobile) */}
 
-        {/* INPUT: TITLE */}
         <Input
           placeholder="Tiêu đề bài viết..."
           value={title}
@@ -118,7 +133,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
           style={{ color: currentTheme.text }}
         />
 
-        {/* INPUT: SUBTITLE */}
         <Input
           placeholder="Mô tả ngắn (không bắt buộc)..."
           value={subtitle}
@@ -132,7 +146,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
           style={{ color: currentTheme.text }}
         />
 
-        {/* EDITOR */}
         <div className="min-h-[500px]">
             <TiptapEditor 
                 content={content} 
@@ -143,7 +156,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
         </div>
       </div>
 
-      {/* FOOTER / MODAL */}
+      {/* FOOTER MODALS */}
       <PublishModal
         open={showPublishModal}
         onClose={() => setShowPublishModal(false)}

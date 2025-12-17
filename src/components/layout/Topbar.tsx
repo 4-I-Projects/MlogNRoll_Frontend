@@ -1,4 +1,4 @@
-import { Search, Menu, Bell, PenSquare, LogIn, UserPlus, LogOut, Palette } from 'lucide-react';
+import { Search, Menu, Bell, PenSquare, LogIn, UserPlus, LogOut } from 'lucide-react'; // Bỏ import Palette
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
@@ -12,7 +12,7 @@ import {
 import { Badge } from '../../ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
-import { useTheme } from '../../context/ThemeContext';
+import { ThemeToggle } from '../ThemeToggle'; // [MỚI] Import component
 
 interface TopbarProps {
   onToggleSidebar: () => void;
@@ -30,8 +30,6 @@ export function Topbar({
   const navigate = useNavigate();
   const auth = useAuth();
   
-  const { themeId, setThemeId } = useTheme();
-
   const isAuthenticated = auth.isAuthenticated;
   const userProfile = auth.user?.profile;
 
@@ -43,12 +41,7 @@ export function Topbar({
     auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
   };
 
-  const cycleTheme = () => {
-    const themes = ['happy', 'sad', 'angry', 'tired', 'romantic'];
-    const currentIndex = themes.indexOf(themeId);
-    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % themes.length;
-    setThemeId(themes[nextIndex]);
-  };
+  // [ĐÃ XÓA] Logic cycleTheme cũ ở đây
 
   return (
     <header className="
@@ -56,22 +49,15 @@ export function Topbar({
       bg-background/80 
       backdrop-blur-theme
       supports-[backdrop-filter]:bg-background/60 
-      
-      /* Shape & Border */
       rounded-theme-b
       border-b-[length:var(--border-width-theme)] border-theme
-      
-      /* Shadow */
       drop-shadow-theme
-      
-      /* Spacing */
       mb-6 
       transition-all duration-300
     ">
-      {/* THÊM: w-full và justify-between vào đây để dàn trải nội dung */}
       <div className="flex h-16 items-center justify-between w-full px-4 md:px-6">
         
-        {/* CỤM TRÁI: Logo & Menu */}
+        {/* CỤM TRÁI */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="lg:hidden">
             <Menu className="h-5 w-5" />
@@ -82,7 +68,7 @@ export function Topbar({
           </button>
         </div>
 
-        {/* CỤM GIỮA: Search (Giữ mx-auto để nó cố gắng căn giữa trong không gian còn lại) */}
+        {/* CỤM GIỮA */}
         <div className="flex-1 max-w-md mx-4 hidden md:block">
            <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -96,18 +82,11 @@ export function Topbar({
           </div>
         </div>
 
-        {/* CỤM PHẢI: Actions */}
+        {/* CỤM PHẢI */}
         <div className="flex items-center gap-2">
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={cycleTheme}
-            title={`Theme hiện tại: ${themeId}`}
-            className="text-muted-foreground hover:text-primary transition-colors rounded-full"
-          >
-            <Palette className="h-5 w-5" />
-          </Button>
+          {/* [MỚI] Sử dụng ThemeToggle chung */}
+          <ThemeToggle className="text-muted-foreground hover:text-primary" />
 
           {!isAuthenticated ? (
             <>
@@ -146,7 +125,6 @@ export function Topbar({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-theme border-theme shadow-theme">
-                   {/* ...Menu content giữ nguyên... */}
                    <div className="flex items-center justify-start gap-2 p-2 font-medium text-sm">
                     <span className="truncate">{displayName}</span>
                   </div>
