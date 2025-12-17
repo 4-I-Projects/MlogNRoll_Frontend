@@ -1,4 +1,4 @@
-import { Search, Menu, Bell, PenSquare, LogIn, UserPlus, LogOut } from 'lucide-react'; // Bỏ import Palette
+import { Search, Menu, Bell, PenSquare, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
@@ -12,13 +12,15 @@ import {
 import { Badge } from '../../ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
-import { ThemeToggle } from '../ThemeToggle'; // [MỚI] Import component
+import { ThemeToggle } from '../ThemeToggle';
+import { User } from '../../features/auth/types';
 
 interface TopbarProps {
   onToggleSidebar: () => void;
   notificationsCount: number;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  currentUser: User;
 }
 
 export function Topbar({ 
@@ -26,14 +28,15 @@ export function Topbar({
   notificationsCount,
   searchQuery,
   onSearchChange,
+  currentUser,
 }: TopbarProps) {
   const navigate = useNavigate();
   const auth = useAuth();
   
   const isAuthenticated = auth.isAuthenticated;
-  const userProfile = auth.user?.profile;
 
-  const displayName = userProfile?.preferred_username || userProfile?.name || 'User';
+  const displayName = currentUser.displayName || auth.user?.profile.preferred_username || 'User';
+  const avatarUrl = currentUser.avatar;
   const initial = displayName.charAt(0).toUpperCase();
 
   const handleLogout = () => {
@@ -41,7 +44,14 @@ export function Topbar({
     auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
   };
 
-  // [ĐÃ XÓA] Logic cycleTheme cũ ở đây
+  // [MỚI] Hàm xử lý khi bấm nút Write
+  const handleWriteClick = () => {
+    if (isAuthenticated) {
+      navigate('/editor');
+    } else {
+      auth.signinRedirect();
+    }
+  };
 
   return (
     <header className="
@@ -85,8 +95,18 @@ export function Topbar({
         {/* CỤM PHẢI */}
         <div className="flex items-center gap-2">
           
-          {/* [MỚI] Sử dụng ThemeToggle chung */}
           <ThemeToggle className="text-muted-foreground hover:text-primary" />
+
+          {/* [MỚI] Nút Write đặt ở đây, luôn hiển thị */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-2 rounded-theme text-muted-foreground hover:text-primary" 
+            onClick={handleWriteClick}
+          >
+            <PenSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Write</span>
+          </Button>
 
           {!isAuthenticated ? (
             <>
@@ -101,10 +121,7 @@ export function Topbar({
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="gap-2 rounded-theme" onClick={() => navigate('/editor')}>
-                <PenSquare className="h-4 w-4" />
-                <span className="hidden sm:inline">Write</span>
-              </Button>
+              {/* [ĐÃ XÓA] Nút Write cũ ở vị trí này */}
 
               <Button variant="ghost" size="icon" className="relative rounded-full" onClick={() => navigate('/')}>
                 <Bell className="h-5 w-5" />
@@ -119,7 +136,7 @@ export function Topbar({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20 transition-all">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src="" alt={displayName} />
+                      <AvatarImage src={avatarUrl} alt={displayName} />
                       <AvatarFallback>{initial}</AvatarFallback>
                     </Avatar>
                   </Button>

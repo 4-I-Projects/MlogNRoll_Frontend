@@ -7,6 +7,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Post } from '@/features/post/types'; // [QUAN TRỌNG] Import type Post
 import { User } from '@/features/auth/types';
 import { usePosts } from '@/features/post/api/get-posts';
+import { formatDate } from '@/utils/date';
+import { POST_STATUS } from '@/config/constants';
 
 export function Stories() {
   const navigate = useNavigate();
@@ -14,14 +16,14 @@ export function Stories() {
 
   // Fetch Published
   const { data: publishedStories, isLoading: loadingPublished } = usePosts({ 
-    userId: currentUser.id, // Đã đổi authorId -> userId khớp với Params
-    status: 'published' 
+    userId: currentUser.id, 
+    status: POST_STATUS.PUBLISHED // Thay 'published'
   });
 
   // Fetch Drafts
   const { data: draftStories, isLoading: loadingDrafts } = usePosts({ 
     userId: currentUser.id, 
-    status: 'draft' 
+    status: POST_STATUS.DRAFT // Thay 'draft'
   });
 
   return (
@@ -37,17 +39,17 @@ export function Stories() {
         </Button>
       </div>
 
-      <Tabs defaultValue="published" className="w-full">
+      <Tabs defaultValue={POST_STATUS.PUBLISHED} className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="published">
+          <TabsTrigger value={POST_STATUS.PUBLISHED}>
             Published {publishedStories ? `(${publishedStories.length})` : ''}
           </TabsTrigger>
-          <TabsTrigger value="drafts">
+          <TabsTrigger value={POST_STATUS.DRAFT}>
             Drafts {draftStories ? `(${draftStories.length})` : ''}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="published">
+        <TabsContent value={POST_STATUS.PUBLISHED}>
           {loadingPublished ? (
             <div className="py-10">Loading...</div>
           ) : publishedStories && publishedStories.length > 0 ? (
@@ -66,7 +68,7 @@ export function Stories() {
           )}
         </TabsContent>
 
-        <TabsContent value="drafts">
+        <TabsContent value={POST_STATUS.DRAFT}>
           {loadingDrafts ? (
              <div className="py-10">Loading...</div>
           ) : draftStories && draftStories.length > 0 ? (
@@ -88,9 +90,7 @@ export function Stories() {
 function StoryItem({ story }: { story: Post }) {
   const navigate = useNavigate();
   // ... (Code StoryItem giữ nguyên như trước)
-  const formattedDate = new Date(story.datePublished || Date.now()).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric'
-  });
+  const formattedDate = formatDate(story.datePublished || new Date().toISOString());
 
   return (
     <div 

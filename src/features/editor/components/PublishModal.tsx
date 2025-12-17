@@ -14,6 +14,7 @@ import { Textarea } from "../../../ui/textarea";
 import { RadioGroup, RadioGroupItem } from "../../../ui/radio-group";
 import { Badge } from "../../../ui/badge";
 import { X } from "lucide-react";
+import { VISIBILITY } from '@/config/constants';
 
 interface PublishModalProps {
   open: boolean;
@@ -37,9 +38,9 @@ export function PublishModal({
   onPublish,
   initialSettings,
 }: PublishModalProps) {
-  const [visibility, setVisibility] = useState<
-    PublishSettings["visibility"]
-  >(initialSettings?.visibility || "public");
+  const [visibility, setVisibility] = useState<PublishSettings["visibility"]>(
+    initialSettings?.visibility || VISIBILITY.PUBLIC
+  );
   const [tags, setTags] = useState<string[]>(
     initialSettings?.tags || [],
   );
@@ -98,7 +99,7 @@ export function PublishModal({
               onValueChange={(v: any) => setVisibility(v as any)}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="public" id="public" />
+                <RadioGroupItem value={VISIBILITY.PUBLIC} id="public" />
                 <Label
                   htmlFor="public"
                   className="cursor-pointer"

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../ui/utils';
 import {
@@ -9,39 +8,83 @@ import {
   Settings,
   HelpCircle,
   FileText,
-  User,
-  ChevronRight
+  User as UserIcon,
+  Lock // Icon ổ khóa tùy chọn nếu muốn hiển thị
 } from 'lucide-react';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Button } from '../../ui/button';
-import { useTheme } from '../../context/ThemeContext';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 
 interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
+  className?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const { currentTheme } = useTheme();
-
+export function Sidebar({ className, isOpen, onClose }: SidebarProps) {
+  
+  // Thêm thuộc tính 'disabled' cho các mục chưa deploy
   const navItems = [
     { icon: Layout, label: 'My Feed', href: '/' },
-    { icon: TrendingUp, label: 'Trending', href: '/trending' },
-    { icon: Hash, label: 'Explore Topics', href: '/topics' },
+    { icon: TrendingUp, label: 'Trending', href: '/trending', disabled: true },
+    { icon: Hash, label: 'Explore Topics', href: '/topics', disabled: true },
     { icon: BookMarked, label: 'Library', href: '/library' },
     { icon: FileText, label: 'Stories', href: '/stories' },
-    { icon: User, label: 'Profile', href: '/profile' },
+    { icon: UserIcon, label: 'Profile', href: '/profile' },
   ];
 
   const footerItems = [
-    { icon: Settings, label: 'Settings', href: '/settings' },
-    { icon: HelpCircle, label: 'Help', href: '/help' },
+    { icon: Settings, label: 'Settings', href: '/settings', disabled: true },
+    { icon: HelpCircle, label: 'Help', href: '/help', disabled: true },
   ];
+
+  // Hàm render chung cho cả 2 list để đỡ lặp code
+  const renderNavItems = (items: typeof navItems) => {
+    return items.map((item) => {
+      // Nếu disabled: Render div tĩnh, mờ đi, không click được
+      if (item.disabled) {
+        return (
+          <div
+            key={item.label}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-theme text-sm font-medium transition-all duration-200",
+              "text-muted-foreground/40 cursor-not-allowed" // Style mờ và cấm click
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+            {/* Badge 'Soon' nhỏ bên phải để báo hiệu */}
+            <span className="ml-auto text-[10px] font-bold uppercase tracking-wider opacity-70 border border-muted-foreground/30 px-1.5 rounded-sm">
+              Soon
+            </span>
+          </div>
+        );
+      }
+
+      // Nếu active: Render NavLink bình thường
+      return (
+        <NavLink
+          key={item.href}
+          to={item.href}
+          onClick={() => window.innerWidth < 1024 && onClose?.()}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-theme text-sm font-medium transition-all duration-200",
+              isActive
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:bg-white/20 hover:text-foreground hover:translate-x-1"
+            )
+          }
+        >
+          <item.icon className="h-4 w-4" />
+          {item.label}
+        </NavLink>
+      );
+    });
+  };
 
   return (
     <>
-      {/* Overlay cho Mobile */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm"
@@ -51,78 +94,31 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       <aside
         className={cn(
-          "fixed left-0 top-16 bottom-0 w-64 z-40 transition-transform duration-300 lg:translate-x-0 lg:sticky lg:h-[calc(100vh-4rem)]",
-          
-          /* --- THAY ĐỔI STYLE Ở ĐÂY --- */
-          /* 1. Xóa 'border-r' mặc định */
-          /* 2. Xóa 'bg-background/95' */
-          
-          /* 3. Dùng biến Sidebar mới: trong suốt + màu theme */
+          "fixed left-0 top-16 bottom-0 w-64 z-40 transition-transform duration-300 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)]",
           "bg-[var(--sidebar)]",
-          
-          /* 4. Thêm hiệu ứng kính mờ (đồng bộ với Topbar/Card) */
           "backdrop-blur-[var(--backdrop-blur-theme)]",
-          
-          /* 5. Viền bên phải: chỉ hiện khi cần (ví dụ Angry/Tired) */
           "border-r border-[var(--sidebar-border)]",
-          
-          /* 6. Bóng đổ nhẹ nếu muốn sidebar nổi lên */
-          "shadow-lg lg:shadow-none", // Mobile có bóng, Desktop thì thôi cho liền mạch
-          
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "shadow-lg lg:shadow-none",
+          className 
         )}
       >
         <ScrollArea className="h-full py-6">
+          
+          {/* Main Navigation */}
           <div className="px-3 space-y-1">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.href}
-                to={item.href}
-                onClick={() => window.innerWidth < 1024 && onClose()}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-theme text-sm font-medium transition-all duration-200", // Thêm rounded-theme cho item
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-md"
-                      : "text-muted-foreground hover:bg-white/20 hover:text-foreground hover:translate-x-1" // Hover effect mượt hơn
-                  )
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-                {/* Dấu mũi tên nhỏ khi active (tùy chọn) */}
-                {/* {isActive && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />} */}
-              </NavLink>
-            ))}
+            {renderNavItems(navItems)}
           </div>
 
+          {/* System Footer */}
           <div className="mt-8 px-3">
             <h3 className="mb-2 px-4 text-xs font-semibold text-muted-foreground tracking-wider uppercase opacity-70">
               System
             </h3>
             <div className="space-y-1">
-              {footerItems.map((item) => (
-                <NavLink
-                  key={item.href}
-                  to={item.href}
-                  onClick={() => window.innerWidth < 1024 && onClose()}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-theme text-sm font-medium transition-all duration-200",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-white/20 hover:text-foreground"
-                    )
-                  }
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </NavLink>
-              ))}
+              {renderNavItems(footerItems)}
             </div>
           </div>
           
-          {/* Card quảng cáo nhỏ dưới cùng (nếu có) */}
           <div className="mt-8 mx-4 p-4 rounded-theme bg-white/10 border border-white/10 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-2">
                <Avatar className="h-8 w-8">

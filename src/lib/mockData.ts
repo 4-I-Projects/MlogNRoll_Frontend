@@ -1,7 +1,7 @@
 import { User } from '@/features/auth/types';
 import { Post, Comment, Tag } from '@/features/post/types';
 
-
+// Mock Users
 export const mockUsers: User[] = [
   {
     id: 'user-1',
@@ -9,11 +9,12 @@ export const mockUsers: User[] = [
     email: 'sarah@example.com',
     firstName: 'Sarah',
     lastName: 'Chen',
-    displayName: 'Sarah Chen', // [FIX] Chỉ dùng displayName, xóa field name
+    displayName: 'Sarah Chen', 
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop',
     bio: 'Tech writer sharing insights.',
     followingCount: 234,
     followersCount: 1520,
+    isFollowing: true // [FIX] Thêm trường này
   },
   {
     id: 'user-2',
@@ -26,6 +27,7 @@ export const mockUsers: User[] = [
     bio: 'UI/UX Designer.',
     followingCount: 156,
     followersCount: 892,
+    isFollowing: false // [FIX]
   },
 ];
 
@@ -40,10 +42,9 @@ export const currentUser: User = {
   bio: 'Learning Microservices.',
   followingCount: 10,
   followersCount: 5,
+  isFollowing: false
 };
 
-// ... Các phần tags và mockPosts giữ nguyên (đã sửa ở bước trước) ...
-// Nhớ đảm bảo mockPosts sử dụng userId thay vì authorId
 const tags: Record<string, Tag> = {
   web: { id: 'tag-1', name: 'Web Development', slug: 'web-dev' },
   tech: { id: 'tag-2', name: 'Technology', slug: 'technology' },
@@ -65,14 +66,15 @@ export const mockPosts: Post[] = [
     stats: { likes: 342, comments: 28, views: 1850 },
     thumbnail: 'https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?w=800&fit=crop',
   },
-  // ...
+  // Thêm các post khác nếu cần...
 ];
 
 export const mockComments: Comment[] = [
   {
     id: 'c1',
     postId: 'post-1',
-    authorId: 'user-2', // userId của người comment
+    userId: 'user-2', // [FIX] Đổi authorId -> userId
+    author: mockUsers[1], // User object đầy đủ (optional nếu BE không trả về)
     content: 'Great article! Really looking forward to these trends.',
     date: '2025-11-05T10:30:00Z',
     likes: 5,
@@ -83,22 +85,21 @@ export const mockComments: Comment[] = [
   {
     id: 'c2',
     postId: 'post-1',
-    authorId: 'user-1',
+    userId: 'user-1', // [FIX] Đổi authorId -> userId
+    author: mockUsers[0],
     content: 'Thanks Alex!',
     date: '2025-11-05T11:00:00Z',
-    parentId: 'c1', // Reply cho comment c1
+    parentId: 'c1', 
     likes: 2,
     isLiked: true,
     replies: []
   }
 ];
 
-// [MỚI] Hàm lấy bài viết theo ID
 export function getPostById(id: string) { 
   return mockPosts.find(p => p.id === id); 
 }
 
-// [FIX LỖI QUAN TRỌNG] Thêm hàm export này để PostDetailPage dùng được
 export const getCommentsByPostId = (postId: string): Comment[] => {
   return mockComments.filter(c => c.postId === postId);
 };

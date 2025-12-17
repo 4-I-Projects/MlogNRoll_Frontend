@@ -18,17 +18,9 @@ export interface Post {
   id: string;
   title: string;
   excerpt: string;
-  
-  // [SỬA 1] Đồng nhất tên gọi là 'content' (Backend Entity: content)
   content: string; 
-  
-  // [SỬA 2] Backend trả về 'userId', không trả về 'authorId' hay object 'author'
   userId: string; 
-  
-  // Trường này sẽ được Frontend tự điền sau khi gọi User Service (Optional)
   author?: User; 
-
-  // [SỬA 3] Backend trả về mảng object Tag, không phải string[]
   tags: Tag[]; 
   
   datePublished: string; // Backend trả về createdAt/updatedAt, cần map sang
@@ -48,7 +40,7 @@ export interface Post {
 export interface Comment {
   id: string;
   postId: string;
-  authorId?: string; // Có thể optional nếu BE trả về object User lồng nhau
+  userId: string;
   author?: User;
   parentId: string | null;
   content: string;

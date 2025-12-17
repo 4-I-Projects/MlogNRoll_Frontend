@@ -1,3 +1,4 @@
+import { formatDate } from '@/utils/date';
 import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
 import { Button } from '../../../ui/button';
 import { User } from '../../auth/types';
@@ -10,11 +11,7 @@ interface AuthorRowProps {
 }
 
 export function AuthorRow({ author, datePublished, readTime, onFollowToggle }: AuthorRowProps) {
-  const formattedDate = new Date(datePublished).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const formattedDate = formatDate(datePublished);
 
   return (
     <div className="flex items-start justify-between gap-4 mb-8 pb-6 border-b">

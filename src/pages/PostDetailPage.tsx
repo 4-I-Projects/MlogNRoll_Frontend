@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, ArrowLeft, Eye } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
@@ -7,12 +7,13 @@ import { AuthorRow } from '../features/post/components/AuthorRow';
 import { CommentsPanel } from '../features/post/components/CommentsPanel';
 import { Comment } from '../features/post/types';
 import { User } from '../features/auth/types';
-import { getCommentsByPostId, mockPosts } from '../lib/mockData'; // Bỏ getPostById
+import { getCommentsByPostId, mockPosts } from '../lib/mockData'; 
 import { PostCard } from '../features/feed/PostCard';
 import { useNavigate, useParams } from 'react-router-dom';
-
 import { usePost } from '@/features/post/api/get-post';
 import { themes } from '../themes';
+import { ImageWithFallback } from '@/components/common/ImageWithFallback';
+import { cn } from '@/ui/utils';
 
 interface PostDetailPageProps {
   currentUser: User;
@@ -21,7 +22,6 @@ interface PostDetailPageProps {
 export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const navigate = useNavigate();
   const { postId } = useParams();
-
   const safePostId = postId || '';
 
   const { data: post, isLoading, error } = usePost(safePostId);
@@ -31,24 +31,23 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [likes, setLikes] = useState(0);
 
+  const currentThemeId = post ? (post as any).themeId || 'happy' : 'happy';
+  const theme = themes[currentThemeId as keyof typeof themes] || themes.happy;
+
   useEffect(() => {
     if (post) {
       setLikes(post.stats?.likes || 0);
       setIsLiked(post.isLiked || false);
-
       setComments(getCommentsByPostId(safePostId));
     }
   }, [post, safePostId]);
 
-  const currentThemeId = post ? (post as any).themeId : 'happy';
-  const theme = themes[currentThemeId as keyof typeof themes] || themes.happy;
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-40">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-4 w-48 bg-gray-200 rounded mb-4"></div>
-          <div className="h-3 w-32 bg-gray-200 rounded"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-4 w-48 bg-muted rounded"></div>
+          <div className="h-3 w-32 bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -56,143 +55,204 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
   if (error || !post) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center">
-          <h2 className="mb-2">Post not found</h2>
-          <p className="text-gray-500 mb-4">The post you're looking for doesn't exist or an error occurred.</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-xl font-semibold text-foreground">Post not found</h2>
+          <p className="text-muted-foreground">The post you're looking for doesn't exist.</p>
           <Button onClick={() => navigate('/')}>Go to Home</Button>
         </div>
       </div>
     );
   }
 
-  const handleFollowToggle = () => {
-    if (post.author) {
-      console.log('Toggle follow author:', post.author.id);
-    }
-  };
-
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikes(isLiked ? likes - 1 : likes + 1);
   };
 
-  const handleAddComment = (content: string) => {
-    const newComment: Comment = {
-      id: `c${Date.now()}`,
-      postId: post.id,
-      authorId: currentUser.id,
-      author: currentUser,
-      parentId: null,
-      content,
-      date: new Date().toISOString(),
-      likes: 0,
-      isLiked: false,
-      replies: [],
-    };
-    setComments([...comments, newComment]);
-  };
-
-  const handleReply = (commentId: string, content: string) => {
-    console.log('Reply to', commentId, content);
-  };
-
-  const handleLikeComment = (commentId: string) => {
-    console.log('Like comment', commentId);
-  };
+  const proseStyle = {
+    '--tw-prose-body': 'var(--foreground)',
+    '--tw-prose-headings': 'var(--foreground)',
+    '--tw-prose-lead': 'var(--muted-foreground)',
+    '--tw-prose-links': 'var(--primary)',
+    '--tw-prose-bold': 'var(--foreground)',
+    '--tw-prose-counters': 'var(--muted-foreground)',
+    '--tw-prose-bullets': 'var(--muted-foreground)',
+    '--tw-prose-hr': 'var(--border)',
+    '--tw-prose-quotes': 'var(--foreground)',
+    '--tw-prose-quote-borders': 'var(--primary)',
+    '--tw-prose-captions': 'var(--muted-foreground)',
+    '--tw-prose-code': 'var(--foreground)',
+    '--tw-prose-pre-code': 'var(--foreground)',
+    '--tw-prose-pre-bg': 'var(--muted)', 
+  } as React.CSSProperties;
 
   const relatedPosts = mockPosts
     .filter((p) => p.userId === post.author?.id && p.id !== post.id)
-    .slice(0, 4);
+    .slice(0, 3);
 
   return (
-    <div
-      className="pb-20 min-h-screen transition-colors duration-300"
-      style={{
-        backgroundColor: theme.background,
-        color: theme.text
-      }}
-    >
-      <article className="max-w-3xl mx-auto pt-10 px-6">
-        <h1
-          className="mb-4 text-3xl font-bold"
-          style={{ color: theme.accent }}
+    // [FIX] Thêm class 'ml-5' (margin-left: 20px) vào div bao ngoài cùng
+    <div className="animate-in fade-in duration-500 pb-20 pt-4 px-4 md:px-8 ml-5">
+      {/* Thanh điều hướng Back */}
+      <div className="max-w-[1400px] mx-auto mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate(-1)}
+          className="gap-2 text-muted-foreground hover:text-foreground pl-0 hover:bg-transparent"
         >
-          {post.title}
-        </h1>
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+      </div>
 
-        {post.author && (
-          <AuthorRow
-            author={post.author}
-            datePublished={post.datePublished}
-            readTime={post.readTime}
-            onFollowToggle={handleFollowToggle}
-          />
-        )}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-10 max-w-[1400px] mx-auto">
+        
+        <main className="min-w-0">
+          <article 
+            className={cn(
+              "text-card-foreground",
+              "rounded-theme", 
+              "border border-theme", 
+              "shadow-md",
+              "overflow-hidden",
+              "bg-background/90", 
+              "backdrop-blur-2xl" 
+            )}
+          >
+            {/* Ảnh bìa */}
+            {post.thumbnail && (
+              <div className="w-full aspect-[21/9] relative overflow-hidden border-b border-theme">
+                <ImageWithFallback
+                  src={post.thumbnail}
+                  alt={post.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
 
-        <div className="flex items-center justify-between mb-8 py-4 border-y">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="gap-2" onClick={handleLike}>
-              <Heart className={`h-5 w-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-              <span>{likes}</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <MessageCircle className="h-5 w-5" />
-              <span>{comments.length}</span>
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setIsSaved(!isSaved)}>
-              <Bookmark className={`h-5 w-5 ${isSaved ? 'fill-current' : ''}`} />
-            </Button>
-            <Button variant="ghost" size="icon"><Share2 className="h-5 w-5" /></Button>
-            <Button variant="ghost" size="icon"><MoreHorizontal className="h-5 w-5" /></Button>
-          </div>
-        </div>
+            <div className="p-8 md:p-12">
+              <header className="mb-10">
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {post.tags.map((tag) => (
+                    <Badge 
+                      key={tag.id} 
+                      variant="secondary" 
+                      className="bg-muted/50 text-foreground hover:bg-muted font-normal px-3 py-1"
+                    >
+                      #{tag.name}
+                    </Badge>
+                  ))}
+                </div>
 
-        {/* Nội dung bài viết */}
-        <div
-          className="prose prose-lg max-w-none mb-8"
-          style={{ '--tw-prose-body': theme.text, '--tw-prose-headings': theme.text } as any}
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+                <h1 className="text-4xl md:text-5xl font-extrabold leading-tight text-foreground mb-8">
+                  {post.title}
+                </h1>
 
-        <div className="flex flex-wrap gap-2 mb-8">
-          {/* [SỬA 2] Render tag.name và dùng tag.id làm key */}
-          {post.tags.map((tag) => (
-            <Badge key={tag.id} variant="secondary">
-              {tag.name}
-            </Badge>
-          ))}
-        </div>
+                {post.author && (
+                   <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                      <AuthorRow
+                        author={post.author}
+                        datePublished={post.datePublished}
+                        readTime={post.readTime}
+                        onFollowToggle={() => {}}
+                      />
+                      <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1 rounded-full">
+                        <Eye className="h-4 w-4" />
+                        <span>{post.stats?.views || 0} views</span>
+                      </div>
+                   </div>
+                )}
+              </header>
 
-        <Separator className="my-8" />
+              <Separator className="my-10 bg-border" />
 
-        <CommentsPanel
-          comments={comments}
-          currentUser={currentUser}
-          onAddComment={handleAddComment}
-          onReply={handleReply}
-          onLike={handleLikeComment}
-        />
-      </article>
-
-      {relatedPosts.length > 0 && (
-        <div className="max-w-3xl mx-auto mt-16">
-          <h2 className="mb-6 font-semibold text-xl">
-            More from {post.author?.displayName || 'Author'}
-          </h2>
-          <div className="space-y-0">
-            {relatedPosts.map((relatedPost) => (
-              <PostCard
-                key={relatedPost.id}
-                post={relatedPost}
-                onClick={() => navigate(`/post/${relatedPost.id}`)} // Lưu ý đường dẫn route
+              <div 
+                className="prose prose-lg md:prose-xl dark:prose-invert max-w-none leading-relaxed"
+                style={proseStyle}
+                dangerouslySetInnerHTML={{ __html: post.content }} 
               />
-            ))}
-          </div>
-        </div>
-      )}
+
+              <Separator className="my-10 bg-border" />
+
+              <div className="flex items-center justify-between py-4">
+                <div className="flex items-center gap-4">
+                  <Button 
+                    variant="ghost" 
+                    size="lg" 
+                    className={cn(
+                      "gap-3 h-12 px-6 rounded-full hover:bg-muted transition-all text-base",
+                      isLiked && "text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50"
+                    )}
+                    onClick={handleLike}
+                  >
+                    <Heart className={cn("h-6 w-6", isLiked && "fill-current")} />
+                    <span className="font-semibold">{likes}</span>
+                  </Button>
+
+                  <Button 
+                    variant="ghost" 
+                    size="lg" 
+                    className="gap-3 h-12 px-6 rounded-full hover:bg-muted transition-all text-base"
+                  >
+                    <MessageCircle className="h-6 w-6" />
+                    <span className="font-semibold">{comments.length}</span>
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted" onClick={() => setIsSaved(!isSaved)}>
+                    <Bookmark className={cn("h-5 w-5", isSaved && "fill-foreground")} />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-12 bg-muted/40 rounded-2xl p-8 border border-theme/50">
+                <CommentsPanel
+                  comments={comments}
+                  currentUser={currentUser}
+                  onAddComment={(content) => { console.log('Add:', content) }}
+                  onReply={(id, content) => { console.log('Reply:', id, content) }}
+                  onLike={(id) => { console.log('Like:', id) }}
+                />
+              </div>
+            </div>
+          </article>
+        </main>
+
+        <aside className="space-y-8 hidden lg:block">
+          {relatedPosts.length > 0 && (
+            <div className="sticky top-24 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg text-foreground">
+                  More from Author
+                </h3>
+              </div>
+              <div className="space-y-6">
+                {relatedPosts.map((relatedPost) => (
+                  <div key={relatedPost.id} className="group relative">
+                    <PostCard
+                      post={relatedPost}
+                      onClick={() => {
+                          window.scrollTo(0, 0); 
+                          navigate(`/post/${relatedPost.id}`);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+
+      </div>
     </div>
   );
 }

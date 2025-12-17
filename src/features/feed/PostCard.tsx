@@ -11,10 +11,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, onClick }: PostCardProps) {
-  const formattedDate = new Date(post.datePublished).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+  const formattedDate = formatDate(post.datePublished);
 
   // [FIX] Lấy tên hiển thị ưu tiên displayName
   const authorName = post.author?.displayName || post.author?.username || 'Unknown';

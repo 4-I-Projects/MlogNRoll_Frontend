@@ -4,6 +4,7 @@ import { Heart, MessageCircle, MoreHorizontal, CornerDownRight } from 'lucide-re
 import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
 import { Button } from '../../../ui/button';
 import { Textarea } from '../../../ui/textarea';
+import { formatDate } from '@/utils/date';
 
 import { Comment as IComment } from '../types';
 
@@ -42,9 +43,7 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
     }
   };
 
-  const formattedDate = new Date(comment.date).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric'
-  });
+  const formattedDate = formatDate(comment.date);
 
   const displayName = comment.author?.displayName || 'Unknown';
   const hasReplies = comment.replies && comment.replies.length > 0;

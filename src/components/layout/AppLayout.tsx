@@ -15,20 +15,24 @@ export const AppLayout = () => {
   const { data: user, isLoading, error } = useCurrentUser();
 
   useEffect(() => {
-    // Logic redirect
+    // Logic redirect khi lỗi auth
     if (!isLoading && !user && error) {
+       // navigate('/login'); // Uncomment nếu muốn redirect
     }
   }, [user, isLoading, error, navigate]);
 
+  // Tự động đóng sidebar khi chuyển trang trên mobile
   useEffect(() => {
     if (isMobile) setSidebarOpen(false);
   }, [location.pathname, isMobile]);
 
+  // Check resize
   useEffect(() => {
     const checkMobile = () => {
       const isMobileView = window.innerWidth < 1024;
       setIsMobile(isMobileView);
       if (isMobileView) setSidebarOpen(false);
+      else setSidebarOpen(true); // Desktop mặc định mở
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -39,13 +43,19 @@ export const AppLayout = () => {
     return <div className="h-screen flex items-center justify-center">Loading application...</div>;
   }
 
+  // [FIX] Cập nhật User mặc định đủ trường
   const defaultUser: User = {
-    id: '',
-    name: 'Guest',
+    id: 'guest',
+    username: 'guest',
+    email: '',
+    firstName: 'Guest',
+    lastName: 'User',
+    displayName: 'Guest', // Dùng displayName thay vì name
     avatar: '',
     bio: '',
     followersCount: 0,
-    followingCount: 0
+    followingCount: 0,
+    isFollowing: false
   };
 
   const displayUser = user || defaultUser;
@@ -57,17 +67,19 @@ export const AppLayout = () => {
         notificationsCount={0}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        currentUser={displayUser}
       />
       
       <div className="flex">
+        {/* [FIX] Truyền className để điều khiển ẩn hiện */}
         <Sidebar 
-          visible={sidebarOpen} 
+          className={sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          isOpen={sidebarOpen} // Dùng cho overlay mobile
           onClose={() => setSidebarOpen(false)}
-          isMobile={isMobile}
         />
         
-        <main className="flex-1 min-w-0">
-          <div className="max-w-4xl mx-auto px-4 md:px-6 py-8">
+        <main className={`flex-1 min-w-0 transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : ''}`}>
+          <div className="w-full mx-auto px-4 md:px-6 py-8">
             <Outlet context={{ searchQuery, currentUser: displayUser }} />
           </div>
         </main>
