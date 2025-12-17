@@ -1,6 +1,4 @@
-//File nay hien tai khong dung den
-
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -8,6 +6,9 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
+
+import { toast } from 'sonner';
+import { uploadImage } from '@/features/post/api/upload-image';
 
 // Import icon
 import { 
@@ -24,8 +25,12 @@ interface TiptapEditorProps {
 }
 
 export function TiptapEditor({ content, onChange, placeholder = "Viết câu chuyện của bạn...", className }: TiptapEditorProps) {
+  // --- STATE ---
   const [showPlusMenu, setShowPlusMenu] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null); // Ref để điều khiển input ẩn
 
+  // --- EDITOR CONFIG ---
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -34,15 +39,14 @@ export function TiptapEditor({ content, onChange, placeholder = "Viết câu chu
         emptyEditorClass: 'is-editor-empty before:content-[attr(data-placeholder)] before:text-gray-400 before:float-left before:pointer-events-none',
       }),
       Image,
-      // [QUAN TRỌNG] Cấu hình Link để luôn mở tab mới
       Link.configure({
-        openOnClick: true, // Cho phép click trực tiếp để mở link (nếu muốn edit thì dùng phím mũi tên)
-        autolink: true,    // Tự động nhận diện khi gõ URL
+        openOnClick: true,
+        autolink: true,
         defaultProtocol: 'https',
         HTMLAttributes: {
-          target: '_blank',            // Luôn mở tab mới
-          rel: 'noopener noreferrer',  // Bảo mật
-          class: 'text-blue-600 hover:underline cursor-pointer', // Style cho link xanh
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          class: 'text-blue-600 hover:underline cursor-pointer',
         },
       }),
       BubbleMenuExtension,
@@ -65,60 +69,108 @@ export function TiptapEditor({ content, onChange, placeholder = "Viết câu chu
     },
   });
 
-  if (!editor) {
-    return null;
-  }
-
   // --- ACTIONS ---
 
-  const addImage = () => {
-    const url = window.prompt('Nhập URL hình ảnh:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-    setShowPlusMenu(false);
+  // 1. Kích hoạt input chọn file
+  const triggerImageUpload = () => {
+    fileInputRef.current?.click();
   };
 
-  // [MỚI] Hàm thêm Link đơn giản
+  // 2. Xử lý khi chọn file xong -> Upload -> Chèn ảnh
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate
+    if (!file.type.startsWith('image/')) {
+        toast.error("Vui lòng chỉ chọn file ảnh!");
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error("Ảnh quá lớn! Vui lòng chọn ảnh dưới 5MB.");
+        return;
+    }
+
+    setIsUploading(true);
+    setShowPlusMenu(false); 
+    
+    const toastId = toast.loading("Đang tải ảnh lên máy chủ...");
+
+    try {
+        // Gọi API Upload thật (Lưu ý: Backend cần có API này)
+        const realUrl = await uploadImage(file);
+
+        if (editor) {
+            editor.chain().focus().setImage({ src: realUrl }).run();
+            // Xuống dòng sau ảnh
+            editor.chain().focus().createParagraphNear().run(); 
+        }
+        
+        toast.success("Tải ảnh thành công!", { id: toastId });
+
+    } catch (error: any) {
+        console.error("Upload failed:", error);
+        const errorMessage = error.response?.data?.message || "Lỗi kết nối đến máy chủ upload.";
+        toast.error(errorMessage, { id: toastId });
+    } finally {
+        setIsUploading(false);
+        // Reset input để chọn lại file cũ được nếu muốn
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''; 
+        }
+    }
+  };
+
   const addSimpleLink = () => {
     const url = window.prompt('Nhập đường dẫn (URL):');
     if (url) {
-      // Chèn URL vào văn bản và gắn link cho nó
-      editor.chain().focus()
+      editor?.chain().focus()
         .insertContent({
           type: 'text',
-          text: url, // Hiển thị chính URL đó
+          text: url,
           marks: [
             {
               type: 'link',
               attrs: {
                 href: url,
-                target: '_blank', // Đảm bảo mở tab mới
+                target: '_blank',
               },
             },
           ],
         })
         .run();
-        
-      // Thêm dấu cách phía sau để user gõ tiếp không bị dính link
-      editor.chain().focus().insertContent(' ').run();
+      editor?.chain().focus().insertContent(' ').run();
     }
     setShowPlusMenu(false);
   };
 
   const addDelimiter = () => {
-    editor.chain().focus().setHorizontalRule().run();
+    editor?.chain().focus().setHorizontalRule().run();
     setShowPlusMenu(false);
   };
 
   const toggleQuote = () => {
-    editor.chain().focus().toggleBlockquote().run();
+    editor?.chain().focus().toggleBlockquote().run();
     setShowPlusMenu(false);
   };
 
+
+  if (!editor) {
+    return null;
+  }
+
   return (
     <>
-      {/* 1. BUBBLE MENU (Hiện khi bôi đen text) */}
+      {/* INPUT ẨN ĐỂ CHỌN FILE */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*"
+        onChange={handleFileUpload}
+      />
+
+      {/* 1. BUBBLE MENU */}
       {editor && (
         <BubbleMenu 
           editor={editor} 
@@ -134,7 +186,7 @@ export function TiptapEditor({ content, onChange, placeholder = "Viết câu chu
         </BubbleMenu>
       )}
 
-      {/* 2. FLOATING MENU (Dấu cộng ở dòng trống) */}
+      {/* 2. FLOATING MENU */}
       {editor && (
         <FloatingMenu 
           editor={editor} 
@@ -146,36 +198,34 @@ export function TiptapEditor({ content, onChange, placeholder = "Viết câu chu
         >
           <div className="flex items-center relative -ml-12" style={{ transform: 'translateY(-50%)' }}>
             
-            {/* Nút Toggle (+) */}
             <button
               onClick={() => setShowPlusMenu(!showPlusMenu)}
               className={cn(
                 "group flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-300 z-50",
                 showPlusMenu 
                   ? "rotate-45 border-gray-400 bg-gray-100 text-gray-600" 
-                  : "border-gray-300 bg-white text-gray-400 hover:border-gray-400 hover:text-gray-600"
+                  : "border-gray-300 bg-white text-gray-400 hover:border-gray-400 hover:text-gray-600",
+                isUploading && "animate-spin border-blue-500 border-t-transparent" // Hiệu ứng loading
               )}
               type="button"
               title="Thêm nội dung"
+              disabled={isUploading}
             >
               <Plus className="w-5 h-5" />
             </button>
 
-            {/* Menu mở rộng */}
             <div 
               className={cn(
                 "flex items-center gap-1 bg-white border border-gray-200 shadow-lg rounded-full px-2 py-1 absolute left-10 transition-all duration-300 origin-left overflow-hidden",
                 showPlusMenu ? "w-auto opacity-100 scale-100" : "w-0 opacity-0 scale-90 pointer-events-none"
               )}
             >
-              <button onClick={addImage} className="p-2 hover:bg-gray-100 rounded-full text-gray-600 hover:text-green-600" title="Hình ảnh"><ImageIcon className="w-5 h-5" /></button>
+              {/* Nút Upload Ảnh */}
+              <button onClick={triggerImageUpload} className="p-2 hover:bg-gray-100 rounded-full text-gray-600 hover:text-green-600" title="Hình ảnh"><ImageIcon className="w-5 h-5" /></button>
+              
               <button onClick={toggleQuote} className="p-2 hover:bg-gray-100 rounded-full text-gray-600 hover:text-yellow-600" title="Trích dẫn"><Quote className="w-5 h-5" /></button>
               <button onClick={addDelimiter} className="p-2 hover:bg-gray-100 rounded-full text-gray-600 hover:text-blue-600" title="Đường phân cách"><Minus className="w-5 h-5" /></button>
-              
-              {/* Nút Link Đơn giản */}
-              <button onClick={addSimpleLink} className="p-2 hover:bg-gray-100 rounded-full text-gray-600 hover:text-purple-600" title="Chèn Link">
-                <LinkIcon className="w-5 h-5" />
-              </button>
+              <button onClick={addSimpleLink} className="p-2 hover:bg-gray-100 rounded-full text-gray-600 hover:text-purple-600" title="Chèn Link"><LinkIcon className="w-5 h-5" /></button>
             </div>
 
           </div>
