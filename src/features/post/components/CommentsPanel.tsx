@@ -1,3 +1,4 @@
+// src/features/post/components/CommentsPanel.tsx
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
 import { Button } from '../../../ui/button';
@@ -5,7 +6,6 @@ import { Textarea } from '../../../ui/textarea';
 import { Comment } from './Comment';
 import { Comment as IComment } from '../types';
 import { User } from '@/features/auth/types';
-
 
 interface CommentsPanelProps {
   comments: IComment[];
@@ -31,43 +31,44 @@ export function CommentsPanel({
     }
   };
 
+  const userName = currentUser.displayName || currentUser.username;
+
   return (
     <div className="mt-12 border-t pt-8">
-      <h2 className="mb-6">Comments ({comments.length})</h2>
+      <h2 className="mb-6 font-bold text-xl">Comments ({comments.length})</h2>
 
       {/* Add new comment */}
-      <div className="mb-8">
-        <div className="flex gap-3">
-          <Avatar className="h-9 w-9 flex-shrink-0">
-            <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-            <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
-          </Avatar>
+      <div className="mb-8 flex gap-4">
+        <Avatar className="h-10 w-10 flex-shrink-0">
+          <AvatarImage src={currentUser.avatar} alt={userName} />
+          <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
+        </Avatar>
 
-          <div className="flex-1 space-y-3">
-            <Textarea
-              placeholder="What are your thoughts?"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="min-h-[100px]"
-            />
-            <div className="flex justify-end gap-2">
+        <div className="flex-1 space-y-3">
+          <Textarea
+            placeholder="What are your thoughts?"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className="min-h-[100px] resize-none"
+          />
+          <div className="flex justify-end gap-2">
+            {newComment && (
               <Button 
                 variant="ghost" 
                 onClick={() => setNewComment('')}
-                disabled={!newComment}
               >
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={!newComment.trim()}>
-                Publish
-              </Button>
-            </div>
+            )}
+            <Button onClick={handleSubmit} disabled={!newComment.trim()}>
+              Post Comment
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Comments list */}
-      <div className="space-y-0 divide-y">
+      <div className="space-y-2">
         {comments.map((comment) => (
           <Comment
             key={comment.id}
@@ -79,7 +80,7 @@ export function CommentsPanel({
       </div>
 
       {comments.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-muted-foreground bg-secondary/20 rounded-lg">
           <p>No comments yet. Be the first to share your thoughts!</p>
         </div>
       )}

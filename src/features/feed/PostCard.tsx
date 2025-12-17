@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { Button } from '../../ui/button';
 import { Post } from '../../features/post/types';
 import { ImageWithFallback } from '../../components/common/ImageWithFallback';
+import { formatDate } from '@/utils/date';
 
 interface PostCardProps {
   post: Post;

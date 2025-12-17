@@ -4,6 +4,8 @@ import { Post, Tag } from '../types';
 import { User } from '@/features/auth/types';
 import { mapUserFromBE } from '@/features/auth/api/get-user';
 
+import { mockApi } from '@/lib/mock-api';
+
 export interface GetPostsParams {
   userId?: string;
   status?: 'published' | 'draft' | 'scheduled';
@@ -28,6 +30,10 @@ interface PostDTO {
 export const getPosts = async (params?: GetPostsParams): Promise<Post[]> => {
   // 1. Gọi API Content Service
   // Ép kiểu 'as any' ở đây để tránh lỗi TS nếu interceptor trả về data trực tiếp
+
+  console.log("Fetching posts with params:", params); // Log để debug
+  return mockApi.posts.getAll(params);
+
   const response = await apiClient.get<PostDTO[]>('/content/posts', {
     params: params 
   }) as any;

@@ -20,13 +20,13 @@ export function AuthorRow({ author, datePublished, readTime, onFollowToggle }: A
     <div className="flex items-start justify-between gap-4 mb-8 pb-6 border-b">
       <div className="flex items-start gap-3">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={author.avatar} alt={author.name} />
-          <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
+          <AvatarImage src={author.avatar} alt={author.displayName} />
+          <AvatarFallback>{author.displayName.charAt(0)}</AvatarFallback>
         </Avatar>
         
         <div>
           <div className="flex items-center gap-2">
-            <span>{author.name}</span>
+            <span>{author.displayName}</span>
             <Button
               variant={author.isFollowing ? 'outline' : 'default'}
               size="sm"

@@ -1,6 +1,7 @@
 import { User } from '@/features/auth/types';
 import { Post, Comment, Tag } from '@/features/post/types';
 
+
 export const mockUsers: User[] = [
   {
     id: 'user-1',
@@ -55,8 +56,8 @@ export const mockPosts: Post[] = [
     title: 'The Future of Web Development',
     excerpt: 'Web development trends in 2025...',
     content: '<p>Full content goes here...</p>',
-    userId: 'user-1', // userId chuẩn
-    author: mockUsers[0],
+    userId: 'current-user-id',
+    author: currentUser,
     datePublished: '2025-11-05T10:00:00Z',
     status: 'published',
     tags: [tags.web, tags.tech],
@@ -67,5 +68,37 @@ export const mockPosts: Post[] = [
   // ...
 ];
 
-export const mockComments: Comment[] = []; 
-export function getPostById(id: string) { return mockPosts.find(p => p.id === id); }
+export const mockComments: Comment[] = [
+  {
+    id: 'c1',
+    postId: 'post-1',
+    authorId: 'user-2', // userId của người comment
+    content: 'Great article! Really looking forward to these trends.',
+    date: '2025-11-05T10:30:00Z',
+    likes: 5,
+    isLiked: false,
+    replies: [],
+    parentId: null
+  },
+  {
+    id: 'c2',
+    postId: 'post-1',
+    authorId: 'user-1',
+    content: 'Thanks Alex!',
+    date: '2025-11-05T11:00:00Z',
+    parentId: 'c1', // Reply cho comment c1
+    likes: 2,
+    isLiked: true,
+    replies: []
+  }
+];
+
+// [MỚI] Hàm lấy bài viết theo ID
+export function getPostById(id: string) { 
+  return mockPosts.find(p => p.id === id); 
+}
+
+// [FIX LỖI QUAN TRỌNG] Thêm hàm export này để PostDetailPage dùng được
+export const getCommentsByPostId = (postId: string): Comment[] => {
+  return mockComments.filter(c => c.postId === postId);
+};

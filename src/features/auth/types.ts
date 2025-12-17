@@ -7,7 +7,6 @@ export interface User {
   firstName: string;
   lastName: string;
 
-  // [GIỮ] Vẫn giữ displayName để UI dùng cho tiện, nhưng sẽ là field được tính toán (computed)
   displayName: string;
 
   // [SỬA] Cho phép null/undefined để tạm bỏ qua
@@ -17,4 +16,6 @@ export interface User {
   // [SỬA] Đánh dấu optional vì API User info cơ bản chưa trả về cái này
   followingCount?: number;
   followersCount?: number;
+
+  isFollowing?: boolean;
 }

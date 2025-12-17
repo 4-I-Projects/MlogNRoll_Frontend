@@ -20,8 +20,8 @@ interface PostDetailPageProps {
 
 export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const navigate = useNavigate();
-  const { postId } = useParams(); 
-  
+  const { postId } = useParams();
+
   const safePostId = postId || '';
 
   const { data: post, isLoading, error } = usePost(safePostId);
@@ -35,14 +35,14 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     if (post) {
       setLikes(post.stats?.likes || 0);
       setIsLiked(post.isLiked || false);
-      
-      setComments(getCommentsByPostId(safePostId)); 
+
+      setComments(getCommentsByPostId(safePostId));
     }
   }, [post, safePostId]);
 
   const currentThemeId = post ? (post as any).themeId : 'happy';
   const theme = themes[currentThemeId as keyof typeof themes] || themes.happy;
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-40">
@@ -102,25 +102,25 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   };
 
   const relatedPosts = mockPosts
-    .filter((p) => p.authorId === post.author?.id && p.id !== post.id)
+    .filter((p) => p.userId === post.author?.id && p.id !== post.id)
     .slice(0, 4);
 
   return (
-    <div 
+    <div
       className="pb-20 min-h-screen transition-colors duration-300"
-      style={{ 
-          backgroundColor: theme.background, 
-          color: theme.text 
+      style={{
+        backgroundColor: theme.background,
+        color: theme.text
       }}
     >
       <article className="max-w-3xl mx-auto pt-10 px-6">
-        <h1 
-            className="mb-4 text-3xl font-bold"
-            style={{ color: theme.accent }}
+        <h1
+          className="mb-4 text-3xl font-bold"
+          style={{ color: theme.accent }}
         >
-            {post.title}
+          {post.title}
         </h1>
-        
+
         {post.author && (
           <AuthorRow
             author={post.author}
@@ -151,15 +151,18 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
         </div>
 
         {/* Nội dung bài viết */}
-        <div 
+        <div
           className="prose prose-lg max-w-none mb-8"
-          style={{ '--tw-prose-body': theme.text, '--tw-prose-headings': theme.text } as any} 
-          dangerouslySetInnerHTML={{ __html: post.body }} 
+          style={{ '--tw-prose-body': theme.text, '--tw-prose-headings': theme.text } as any}
+          dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
         <div className="flex flex-wrap gap-2 mb-8">
+          {/* [SỬA 2] Render tag.name và dùng tag.id làm key */}
           {post.tags.map((tag) => (
-            <Badge key={tag} variant="secondary">{tag}</Badge>
+            <Badge key={tag.id} variant="secondary">
+              {tag.name}
+            </Badge>
           ))}
         </div>
 
@@ -176,13 +179,15 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
       {relatedPosts.length > 0 && (
         <div className="max-w-3xl mx-auto mt-16">
-          <h2 className="mb-6 font-semibold text-xl">More from {post.author?.name}</h2>
+          <h2 className="mb-6 font-semibold text-xl">
+            More from {post.author?.displayName || 'Author'}
+          </h2>
           <div className="space-y-0">
             {relatedPosts.map((relatedPost) => (
               <PostCard
                 key={relatedPost.id}
                 post={relatedPost}
-                onClick={() => navigate(`/post/${relatedPost.id}`)}
+                onClick={() => navigate(`/post/${relatedPost.id}`)} // Lưu ý đường dẫn route
               />
             ))}
           </div>
