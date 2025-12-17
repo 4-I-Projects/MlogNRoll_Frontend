@@ -44,7 +44,6 @@ export function Topbar({
   };
 
   const cycleTheme = () => {
-    // Danh sách tên theme (string) chứ không phải object theme
     const themes = ['happy', 'sad', 'angry', 'tired', 'romantic'];
     const currentIndex = themes.indexOf(themeId);
     const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % themes.length;
@@ -52,7 +51,21 @@ export function Topbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 transition-colors duration-300">
+    // THAY ĐỔI Ở ĐÂY:
+    // 1. Xóa 'border-b border-border/40' (viền mặc định)
+    // 2. Thêm 'rounded-theme-b' (Bo 2 góc dưới)
+    // 3. Thêm 'border-b-theme border-theme' (Viền đáy kiểm soát bởi biến theme)
+    // 4. Thêm 'shadow-theme' (Topbar cũng đổ bóng theo theme)
+    <header className="
+      sticky top-0 z-50 w-full 
+      bg-background/80 
+      backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 
+      transition-all duration-300
+      rounded-theme-b
+      border-b-[length:var(--border-width-theme)] border-theme
+      shadow-theme
+      mb-6
+    ">
       <div className="flex h-16 items-center gap-4 px-4 md:px-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="lg:hidden">
@@ -70,7 +83,8 @@ export function Topbar({
             <Input
               type="search"
               placeholder="Search..."
-              className="pl-9 bg-muted/50 border-transparent focus:bg-background transition-all"
+              // Thêm rounded-theme vào ô input để nó đồng bộ với theme
+              className="pl-9 bg-muted/50 border-transparent focus:bg-background transition-all rounded-theme"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -79,37 +93,36 @@ export function Topbar({
 
         <div className="flex items-center gap-2">
           
-          {/* Nút đổi theme DEBUG */}
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={cycleTheme}
             title={`Theme hiện tại: ${themeId}`}
-            className="text-muted-foreground hover:text-primary transition-colors"
+            className="text-muted-foreground hover:text-primary transition-colors rounded-full"
           >
             <Palette className="h-5 w-5" />
           </Button>
 
           {!isAuthenticated ? (
             <>
-              <Button variant="ghost" size="sm" className="gap-2" onClick={() => auth.signinRedirect()}>
+              <Button variant="ghost" size="sm" className="gap-2 rounded-theme" onClick={() => auth.signinRedirect()}>
                 <LogIn className="h-4 w-4" />
                 <span className="hidden sm:inline">Đăng nhập</span>
               </Button>
               
-              <Button variant="ghost" size="sm" className="gap-2" onClick={() => auth.signinRedirect({ prompt: 'create', extraQueryParams: { kc_action: 'register' } })}>
+              <Button variant="ghost" size="sm" className="gap-2 rounded-theme" onClick={() => auth.signinRedirect({ prompt: 'create', extraQueryParams: { kc_action: 'register' } })}>
                 <UserPlus className="h-4 w-4" />
                 <span className="hidden sm:inline">Đăng ký</span>
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/editor')}>
+              <Button variant="ghost" size="sm" className="gap-2 rounded-theme" onClick={() => navigate('/editor')}>
                 <PenSquare className="h-4 w-4" />
                 <span className="hidden sm:inline">Write</span>
               </Button>
 
-              <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('/')}>
+              <Button variant="ghost" size="icon" className="relative rounded-full" onClick={() => navigate('/')}>
                 <Bell className="h-5 w-5" />
                 {notificationsCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0" variant="destructive">
@@ -127,7 +140,7 @@ export function Topbar({
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 rounded-theme border-theme">
                   <div className="flex items-center justify-start gap-2 p-2 font-medium text-sm">
                     <span className="truncate">{displayName}</span>
                   </div>

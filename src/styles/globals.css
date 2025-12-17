@@ -5,157 +5,165 @@
 :root {
   /* --- BASE SIZE & RADIUS --- */
   --font-size: 16px;
-  --radius: 0.625rem;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-
-  /* --- DEFAULT THEME (Happy / Light) --- */
-  /* Fallback nếu không có data-theme */
-  --theme-gradient: linear-gradient(135deg, #FFF7D1 0%, #FFD700 100%); /* Happy Gradient */
+  /* Mặc định cho Happy (Vui vẻ) */
+  --radius-theme: 1.5rem; /* 24px - Bo tròn nhiều */
+  --border-width-theme: 0px;
+  --border-color-theme: transparent;
+  --shadow-theme: 0 10px 25px -5px rgba(255, 140, 0, 0.3); /* Bóng cam mềm */
+  --backdrop-blur-theme: 0px;
+  /* Pattern: Chấm bi mờ cho vui vẻ */
+  --bg-pattern: radial-gradient(#FFD700 1px, transparent 1px);
+  --bg-pattern-size: 20px 20px;
   
+  /* Các biến màu gốc của bạn giữ nguyên */
+  --theme-gradient: linear-gradient(135deg, #FFF7D1 0%, #FFD700 100%);
   --background: #ffffff;
-  --foreground: #5D4037; /* Happy Text */
-
+  --foreground: #5D4037;
   --card: #ffffff;
   --card-foreground: #5D4037;
-
   --popover: #ffffff;
   --popover-foreground: #5D4037;
-
-  --primary: #FF8C00; /* Happy Accent */
+  --primary: #FF8C00;
   --primary-foreground: #ffffff;
-
-  --secondary: #FFF7D1; /* Lấy màu nhạt từ gradient */
+  --secondary: #FFF7D1;
   --secondary-foreground: #FF8C00;
-
   --muted: #ececf0;
   --muted-foreground: #717182;
-
   --accent: #FFD700;
   --accent-foreground: #5D4037;
-
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
-
   --border: rgba(0, 0, 0, 0.1);
   --input: transparent;
   --input-background: rgba(255, 255, 255, 0.5);
   --ring: #FF8C00;
-
-  /* Chart Colors (Giữ nguyên hoặc chỉnh theo theme nếu muốn) */
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-
-  /* Sidebar */
   --sidebar: rgba(255, 255, 255, 0.8);
   --sidebar-foreground: #5D4037;
-  --sidebar-primary: #FF8C00;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #FFF7D1;
-  --sidebar-accent-foreground: #FF8C00;
-  --sidebar-border: rgba(0,0,0,0.05);
-  --sidebar-ring: #FF8C00;
 }
 
 /* --- THEME OVERRIDES --- */
 
-/* 1. SAD THEME (Buồn) */
+/* 1. SAD THEME (Buồn) - Kính mờ, Mong manh */
 [data-theme="sad"] {
-  --theme-gradient: linear-gradient(135deg, #E0E6F8 0%, #8999C2 100%);
-  --background: #E0E6F8; /* Solid color fallback */
-  --foreground: #1F2D3D;
+  --radius-theme: 0.5rem; /* 8px - Bo nhẹ */
+  --border-width-theme: 1px;
+  --border-color-theme: rgba(255, 255, 255, 0.3);
+  --shadow-theme: none; /* Không bóng, phẳng */
+  --backdrop-blur-theme: 12px; /* Hiệu ứng kính */
   
+  /* Pattern: Giọt mưa (Gradient dọc mờ) */
+  --bg-pattern: linear-gradient(to bottom, rgba(255,255,255,0.4) 1px, transparent 1px);
+  --bg-pattern-size: 100% 40px;
+
+  /* Màu cũ */
+  --theme-gradient: linear-gradient(135deg, #E0E6F8 0%, #8999C2 100%);
+  --background: #E0E6F8;
+  --foreground: #1F2D3D;
   --primary: #2C3E50;
   --primary-foreground: #ffffff;
-  
-  --card: rgba(255, 255, 255, 0.6);
+  --card: rgba(255, 255, 255, 0.4); /* Trong suốt hơn để thấy kính */
   --card-foreground: #1F2D3D;
-  
   --muted: #8999C2;
   --muted-foreground: #4A5568;
-  
   --accent: #B0C4DE;
   --accent-foreground: #1F2D3D;
-  
   --ring: #2C3E50;
 }
 
-/* 2. ANGRY THEME (Giận dữ) */
+/* 2. ANGRY THEME (Giận dữ) - Góc cạnh, Thô ráp */
 [data-theme="angry"] {
+  --radius-theme: 0px; /* Vuông vức, không bo */
+  --border-width-theme: 2px;
+  --border-color-theme: #470000;
+  --shadow-theme: 6px 6px 0px 0px #470000; /* Bóng cứng solid, lệch góc */
+  --backdrop-blur-theme: 0px;
+  
+  /* Pattern: Sọc chéo cảnh báo (Noise/Grunge) */
+  --bg-pattern: repeating-linear-gradient(45deg, #ffcccc 0, #ffcccc 1px, transparent 0, transparent 50%);
+  --bg-pattern-size: 10px 10px;
+
+  /* Màu cũ */
   --theme-gradient: linear-gradient(135deg, #FFE5E5 0%, #FF4D4D 100%);
   --background: #FFE5E5;
   --foreground: #470000;
-  
   --primary: #990000;
   --primary-foreground: #ffffff;
-  
-  --card: rgba(255, 255, 255, 0.7);
+  --card: #ffffff; /* Card đặc để tạo tương phản mạnh */
   --card-foreground: #470000;
-  
   --muted: #FFCCCB;
   --muted-foreground: #800000;
-  
   --accent: #FF0000;
   --accent-foreground: #ffffff;
-  
   --ring: #990000;
 }
 
-/* 3. TIRED THEME */
+/* 3. TIRED THEME (Mệt mỏi) - Nhạt nhòa, Phẳng */
 [data-theme="tired"] {
+  --radius-theme: 0.25rem; /* 4px - Hơi vuông */
+  --border-width-theme: 1px;
+  --border-color-theme: #D1D5DB;
+  --shadow-theme: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Bóng rất nhẹ */
+  --backdrop-blur-theme: 0px;
+  --bg-pattern: none; /* Không họa tiết */
+  --bg-pattern-size: auto;
+
+  /* Màu cũ */
   --theme-gradient: linear-gradient(135deg, #F3F4F6 0%, #D1D5DB 100%);
   --background: #F3F4F6;
   --foreground: #4B5563;
-  
   --primary: #6B7280;
   --primary-foreground: #ffffff;
-  
-  --card: rgba(255, 255, 255, 0.5);
+  --card: rgba(255, 255, 255, 0.8);
   --card-foreground: #4B5563;
-  
   --muted: #E5E7EB;
   --muted-foreground: #9CA3AF;
-  
   --accent: #D1D5DB;
   --accent-foreground: #374151;
-  
   --ring: #6B7280;
 }
 
-/* 4. ROMANTIC THEME (Lãng mạn) */
+/* 4. ROMANTIC THEME (Lãng mạn) - Mềm mại, Bay bổng */
 [data-theme="romantic"] {
+  --radius-theme: 2rem 0.5rem 2rem 0.5rem; /* Hình dáng lá thư/cánh hoa */
+  --border-width-theme: 0px;
+  --border-color-theme: transparent;
+  --shadow-theme: 0 10px 30px -10px rgba(225, 29, 72, 0.4); /* Bóng hồng lan tỏa */
+  --backdrop-blur-theme: 4px;
+  
+  /* Pattern: Giấy cũ / Lưới mờ */
+  --bg-pattern: radial-gradient(circle, #FECDD3 1px, transparent 1px);
+  --bg-pattern-size: 15px 15px;
+
+  /* Màu cũ */
   --theme-gradient: linear-gradient(135deg, #FFF1F2 0%, #FECDD3 100%);
   --background: #FFF1F2;
   --foreground: #881337;
-  
   --primary: #E11D48;
   --primary-foreground: #ffffff;
-  
-  --card: rgba(255, 255, 255, 0.6);
+  --card: rgba(255, 255, 255, 0.7);
   --card-foreground: #881337;
-  
   --muted: #FCE7F3;
   --muted-foreground: #BE185D;
-  
   --accent: #FDA4AF;
   --accent-foreground: #881337;
-  
   --ring: #E11D48;
 }
 
-/* 5. HAPPY THEME (Redefine explicitly to match structure) */
+/* 5. HAPPY THEME (Redefine) */
 [data-theme="happy"] {
+  /* Kế thừa mặc định :root nhưng ghi lại để chắc chắn */
+  --radius-theme: 1.5rem;
+  --border-width-theme: 0px;
+  --shadow-theme: 0 10px 25px -5px rgba(255, 140, 0, 0.3);
+  --bg-pattern: radial-gradient(#FFD700 1px, transparent 1px);
+  
+  /* Màu cũ */
   --theme-gradient: linear-gradient(135deg, #FFF7D1 0%, #FFD700 100%);
   --background: #FFF7D1;
   --foreground: #5D4037;
   --primary: #FF8C00;
   --primary-foreground: #ffffff;
-  --card: rgba(255, 255, 255, 0.6);
+  --card: rgba(255, 255, 255, 0.85);
   --ring: #FF8C00;
 }
 
@@ -166,24 +174,13 @@
   }
 
   body {
-    /* Sử dụng gradient nền cho toàn bộ body */
     background: var(--theme-gradient);
-    background-attachment: fixed; /* Giữ nền cố định khi cuộn */
-    background-size: cover;
+    /* Áp dụng pattern lên body */
+    background-image: var(--bg-pattern), var(--theme-gradient);
+    background-size: var(--bg-pattern-size), cover;
+    background-attachment: fixed;
     color: var(--foreground);
     min-height: 100vh;
-    transition: background 0.5s ease, color 0.5s ease; /* Hiệu ứng chuyển mượt */
+    transition: background 0.5s ease, color 0.5s ease;
   }
-}
-
-/* Utility Animations */
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradientMove 15s ease infinite;
 }

@@ -1,7 +1,7 @@
 import { Heart, MessageCircle, Bookmark, MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { Button } from '../../ui/button';
-import { Badge } from '../../ui/badge';
+// import { Badge } from '../../ui/badge'; // Tạm comment theo code cũ của bạn
 import { Post } from '../../features/post/types';
 import { ImageWithFallback } from '../../components/common/ImageWithFallback';
 
@@ -17,42 +17,49 @@ export function PostCard({ post, onClick }: PostCardProps) {
   });
 
   return (
-    <article className="group cursor-pointer border-b py-6 hover:bg-gray-50/50 transition-colors">
+    // THAY ĐỔI Ở ĐÂY:
+    // 1. Xóa 'border-b', 'hover:bg-gray-50/50' (các style cũ)
+    // 2. Thêm các class theme semantic:
+    //    - rounded-theme: Bo góc theo mood
+    //    - border-theme border-theme: Viền và độ dày theo mood
+    //    - shadow-theme: Bóng đổ theo mood
+    //    - bg-card: Màu nền card (đã có độ trong suốt định nghĩa ở globals.css)
+    //    - backdrop-blur-theme: Hiệu ứng kính cho theme Sad
+    <article className="
+      group cursor-pointer 
+      py-6 px-5 mb-4 
+      bg-card 
+      rounded-theme 
+      border-theme border-theme 
+      shadow-theme 
+      backdrop-blur-theme
+      transition-all duration-300 hover:-translate-y-1
+    ">
       <div className="flex gap-4">
         <div className="flex-1 min-w-0" onClick={onClick}>
           {/* Author info */}
           <div className="flex items-center gap-2 mb-3">
-            <Avatar className="h-6 w-6">
+            <Avatar className="h-6 w-6 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
               <AvatarImage src={post.author?.avatar} alt={post.author?.name} />
               <AvatarFallback>{post.author?.name.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="text-sm">{post.author?.name}</span>
-            <span className="text-sm text-gray-400">·</span>
-            <span className="text-sm text-gray-500">{formattedDate}</span>
+            <span className="text-sm font-medium text-foreground">{post.author?.name}</span>
+            <span className="text-sm text-muted-foreground">·</span>
+            <span className="text-sm text-muted-foreground">{formattedDate}</span>
           </div>
 
           {/* Title & Excerpt */}
-          <h2 className="mb-2 line-clamp-2">
+          <h2 className="mb-2 line-clamp-2 text-xl font-bold text-foreground">
             {post.title}
           </h2>
-          <p className="text-gray-600 line-clamp-3 mb-4">
+          <p className="text-muted-foreground line-clamp-3 mb-4">
             {post.excerpt}
           </p>
 
           {/* Footer */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* Tags */}
-              {/* <div className="flex gap-2">
-                {post.tags.slice(0, 2).map((tag, i) => (
-                  <Badge key={i} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div> */}
-              
-              {/* Read time */}
-              <span className="text-sm text-gray-500">{post.readTime} min read</span>
+              <span className="text-sm text-muted-foreground">{post.readTime} min read</span>
             </div>
 
             {/* Stats & Actions */}
@@ -60,47 +67,34 @@ export function PostCard({ post, onClick }: PostCardProps) {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="gap-1 h-8"
+                className="gap-1 h-8 hover:bg-primary/10 hover:text-primary rounded-full"
                 onClick={(e) => {
                   e.stopPropagation();
                 }}
               >
                 <Heart className="h-4 w-4" />
-                {/* <span className="text-xs">{post.stats.likes}</span> */}
               </Button>
               
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="gap-1 h-8"
+                className="gap-1 h-8 hover:bg-primary/10 hover:text-primary rounded-full"
                 onClick={(e) => {
                   e.stopPropagation();
                 }}
               >
                 <MessageCircle className="h-4 w-4" />
-                {/* <span className="text-xs">{post.stats.comments}</span> */}
               </Button>
               
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8"
+                className="h-8 w-8 hover:bg-primary/10 hover:text-primary rounded-full"
                 onClick={(e) => {
                   e.stopPropagation();
                 }}
               >
                 <Bookmark className="h-4 w-4" />
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -109,11 +103,14 @@ export function PostCard({ post, onClick }: PostCardProps) {
         {/* Thumbnail */}
         {post.thumbnail && (
           <div className="w-28 h-28 flex-shrink-0" onClick={onClick}>
-            <ImageWithFallback
-              src={post.thumbnail}
-              alt={post.title}
-              className="w-full h-full object-cover rounded"
-            />
+            {/* Thêm rounded-theme vào ảnh để nó khớp với card */}
+            <div className="w-full h-full overflow-hidden rounded-[calc(var(--radius-theme)-4px)]">
+               <ImageWithFallback
+                src={post.thumbnail}
+                alt={post.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            </div>
           </div>
         )}
       </div>
