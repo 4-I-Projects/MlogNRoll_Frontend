@@ -27,16 +27,18 @@ export const mapUserFromBE = (data: any): User => {
 };
 
 // Gọi API lấy chi tiết 1 user
-export const getUser = async (userId: string): Promise<User> => {
-  const response = await apiClient.get<any>(`/users/${userId}`);
-  // Map dữ liệu trước khi trả về cho Component dùng
-  return mapUserFromBE(response);
+export const getUser = ({ userId }: { userId: string }): Promise<User> => {
+  // [FIX] Thêm dòng này: Nếu là 'guest' hoặc rỗng thì không gọi API
+  if (!userId || userId === 'guest') {
+    return Promise.resolve(null as any);
+  }
+  return apiClient.get(`/users/${userId}`);
 };
 
 export const useUser = (userId: string) => {
   return useQuery({
     queryKey: ['users', userId],
-    queryFn: () => getUser(userId),
+    queryFn: () => getUser({ userId }),
     enabled: !!userId,
   });
 };
