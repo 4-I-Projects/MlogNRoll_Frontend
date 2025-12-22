@@ -4,92 +4,100 @@ import { Post, Tag } from '../types';
 import { User } from '@/features/auth/types';
 import { mapUserFromBE } from '@/features/auth/api/get-user';
 
-import { mockApi } from '@/lib/mock-api';
-
 export interface GetPostsParams {
   userId?: string;
   status?: 'published' | 'draft' | 'scheduled';
   q?: string;
 }
 
+// [QUAN TRỌNG] Interface này phải khớp 100% với PostResponse.java ở Backend
+// Backend: Long id, String title, String body, Long authorId, ...
 interface PostDTO {
-  id: string;
+  id: number;          // Backend đang trả về Long
   title: string;
-  excerpt: string;
-  content: string;
-  slug: string;
-  thumbnail?: string;
-  status: string;
-  userId: string;
+  body: string;        // Backend dùng 'body', không phải 'content'
+  status: string;      // Backend thường trả về UPPERCASE (PUBLISHED)
+  authorId: string | number; // Backend trả về authorId. Để string | number để an toàn khi bạn đổi DB
   tags: Tag[];
-  categoryId?: string;
+  category?: {         // Backend trả về object category
+    id: number;
+    name: string;
+  };
   createdAt: string;
   updatedAt: string;
+  publishedAt?: string;
 }
 
 export const getPosts = async (params?: GetPostsParams): Promise<Post[]> => {
   // 1. Gọi API Content Service
-  // Ép kiểu 'as any' ở đây để tránh lỗi TS nếu interceptor trả về data trực tiếp
-
-  console.log("Fetching posts with params:", params); // Log để debug
-  return mockApi.posts.getAll(params);
-
-  const response = await apiClient.get<PostDTO[]>('/content/posts', {
+  // Lưu ý: Đường dẫn '/content/posts' giả định bạn đã config Gateway trỏ vào Content Service
+  // Nếu Gateway map '/api/v1/posts' thẳng vào content-service, bạn có thể chỉ cần gọi '/posts'
+  const response = await apiClient.get<PostDTO[]>('/posts', {
     params: params 
-  }) as any;
-  
-  // Xử lý linh hoạt: Nếu interceptor đã trả data thì dùng luôn, nếu chưa thì lấy .data
-  const postsData = response.data || response;
+  });
 
-  if (!Array.isArray(postsData)) {
+  // Xử lý linh hoạt dữ liệu trả về từ Axios Interceptor
+  // Ép kiểu 'unknown' trước khi 'as any' để tránh lỗi eslint nếu có, 
+  // hoặc check kỹ xem interceptor của bạn trả về data hay response object
+  const rawData = response as any;
+  const postsData: PostDTO[] = Array.isArray(rawData) ? rawData : (rawData.data || []);
+
+  if (!Array.isArray(postsData) || postsData.length === 0) {
     return [];
   }
 
   // 2. Client-side Aggregation (Lấy thông tin User)
-  const uniqueUserIds = [...new Set(postsData.map((p: PostDTO) => p.userId))];
+  // Lấy danh sách authorId duy nhất từ bài viết
+  const uniqueAuthorIds = [...new Set(postsData.map((p) => p.authorId))];
   
-  const userPromises = uniqueUserIds.map((id) => 
+  const userPromises = uniqueAuthorIds.map((id) => 
     apiClient.get(`/users/${id}`)
-      // [FIX LỖI QUAN TRỌNG] 
-      // Ép kiểu 'res as any' để TS biết đây là object user (đã qua interceptor), 
-      // không phải là AxiosResponse
       .then((res) => res as any) 
       .catch(() => null)
   );
   
   const usersRaw = await Promise.all(userPromises);
   
-  // Map userId -> User Object
-  const userMap = new Map();
+  // Map authorId -> User Object
+  const userMap = new Map<string | number, User>();
   usersRaw.forEach((u) => {
-    // [HẾT LỖI] Bây giờ 'u' là 'any', nên TS cho phép truy cập .id
     if (u && u.id) {
       userMap.set(u.id, mapUserFromBE(u));
     }
   });
 
-  // 3. Map dữ liệu về Frontend Model
-  return postsData.map((post: PostDTO) => {
-    const author = userMap.get(post.userId) || {
-      id: post.userId,
+  // 3. Map dữ liệu Backend về Frontend Model
+  return postsData.map((post) => {
+    // Tìm user trong map, nếu không thấy thì dùng fallback
+    const author = userMap.get(post.authorId) || {
+      id: String(post.authorId),
       username: 'unknown',
       displayName: 'Unknown User',
       avatar: '',
+      bio: '',
     } as User;
 
+    // Tự động tạo đoạn trích (excerpt) từ body nếu backend không gửi về
+    const generatedExcerpt = post.body 
+      ? post.body.substring(0, 150) + (post.body.length > 150 ? '...' : '') 
+      : '';
+
     return {
-      id: post.id,
+      id: String(post.id), // FE thường dùng string cho ID để thống nhất
       title: post.title,
-      excerpt: post.excerpt || '',
-      content: post.content,
-      userId: post.userId,
+      // Map 'body' của BE sang 'content' của FE
+      content: post.body, 
+      excerpt: generatedExcerpt,
+      userId: String(post.authorId),
       author: author,
-      datePublished: post.createdAt,
-      status: post.status as any,
+      // Ưu tiên dùng publishedAt cho ngày hiển thị, nếu không có thì dùng createdAt
+      datePublished: post.publishedAt || post.createdAt,
+      // Chuyển status từ UPPERCASE (BE) sang lowercase (FE) nếu cần
+      status: (post.status ? post.status.toLowerCase() : 'draft') as any,
       tags: post.tags || [],
-      thumbnail: post.thumbnail,
-      readTime: 5, 
-      stats: { likes: 0, comments: 0, views: 0 },
+      thumbnail: undefined, // Backend hiện tại chưa thấy trả về thumbnail
+      readTime: Math.ceil((post.body?.length || 0) / 1000) || 5, // Tính giả định thời gian đọc
+      stats: { likes: 0, comments: 0, views: 0 }, // Engagement service chưa kết nối
     };
   });
 };

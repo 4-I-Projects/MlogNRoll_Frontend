@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, forwardRef, useImperativeHandle } from 'react'; // [THÊM] import forwardRef, useImperativeHandle
 import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -17,6 +17,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/ui/utils';
 
+// [THÊM] Định nghĩa kiểu dữ liệu cho Ref
+export interface TiptapEditorRef {
+  triggerImageUpload: () => void;
+  editor: any; 
+}
+
 interface TiptapEditorProps {
   content: string;
   onChange: (html: string) => void;
@@ -24,7 +30,8 @@ interface TiptapEditorProps {
   className?: string;
 }
 
-export function TiptapEditor({ content, onChange, placeholder = "Viết câu chuyện của bạn...", className }: TiptapEditorProps) {
+// [SỬA] Bọc component trong forwardRef
+export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ content, onChange, placeholder = "Viết câu chuyện của bạn...", className }, ref) => {
   // --- STATE ---
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -76,6 +83,12 @@ export function TiptapEditor({ content, onChange, placeholder = "Viết câu chu
     fileInputRef.current?.click();
   };
 
+  // [THÊM] Public hàm này ra ngoài để cha gọi được
+  useImperativeHandle(ref, () => ({
+    triggerImageUpload,
+    editor
+  }));
+
   // 2. Xử lý khi chọn file xong -> Upload -> Chèn ảnh
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -97,7 +110,7 @@ export function TiptapEditor({ content, onChange, placeholder = "Viết câu chu
     const toastId = toast.loading("Đang tải ảnh lên máy chủ...");
 
     try {
-        // Gọi API Upload thật (Lưu ý: Backend cần có API này)
+        // Gọi API Upload thật
         const realUrl = await uploadImage(file);
 
         if (editor) {
@@ -235,4 +248,6 @@ export function TiptapEditor({ content, onChange, placeholder = "Viết câu chu
       <EditorContent editor={editor} />
     </>
   );
-}
+});
+
+TiptapEditor.displayName = "TiptapEditor"; // Bắt buộc khi dùng forwardRef

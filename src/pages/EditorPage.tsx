@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // [THÊM] useRef
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { TiptapEditor } from '../features/editor/components/TiptapEditor';
+import { TiptapEditor, TiptapEditorRef } from '../features/editor/components/TiptapEditor'; // [THÊM] TiptapEditorRef
+import { EditorToolbar } from '../features/editor/components/EditorToolbar'; // [THÊM] Import Toolbar
 import { PublishModal, PublishSettings } from '../features/editor/components/PublishModal';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { User } from '@/features/auth/types';
@@ -28,6 +29,9 @@ export function EditorPage({ currentUser }: EditorPageProps) {
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [wordCount, setWordCount] = useState(0);
+
+  // [THÊM] Ref để điều khiển Editor từ bên ngoài
+  const editorRef = useRef<TiptapEditorRef>(null);
 
   useEffect(() => {
     const text = content.replace(/<[^>]*>/g, ''); 
@@ -57,7 +61,53 @@ export function EditorPage({ currentUser }: EditorPageProps) {
     }, 1500);
   };
 
-  // [FIX] Lấy tên hiển thị an toàn
+  // [THÊM] Hàm xử lý sự kiện từ Toolbar
+  const handleToolbarAction = (action: string) => {
+    const editor = editorRef.current?.editor;
+    if (!editor) return;
+
+    switch (action) {
+      case 'image':
+        editorRef.current?.triggerImageUpload(); // Gọi hàm upload của TiptapEditor
+        break;
+      case 'bold':
+        editor.chain().focus().toggleBold().run();
+        break;
+      case 'italic':
+        editor.chain().focus().toggleItalic().run();
+        break;
+      case 'underline':
+        editor.chain().focus().toggleUnderline?.().run(); // Cần extension Underline
+        break;
+      case 'h1':
+        editor.chain().focus().toggleHeading({ level: 1 }).run();
+        break;
+      case 'h2':
+        editor.chain().focus().toggleHeading({ level: 2 }).run();
+        break;
+      case 'quote':
+        editor.chain().focus().toggleBlockquote().run();
+        break;
+      case 'code':
+        editor.chain().focus().toggleCodeBlock().run();
+        break;
+      case 'bulletList':
+        editor.chain().focus().toggleBulletList().run();
+        break;
+      case 'orderedList':
+        editor.chain().focus().toggleOrderedList().run();
+        break;
+      case 'undo':
+        editor.chain().focus().undo().run();
+        break;
+      case 'redo':
+        editor.chain().focus().redo().run();
+        break;
+      default:
+        console.warn('Unknown toolbar action:', action);
+    }
+  };
+
   const authorName = currentUser.displayName || currentUser.username || 'User';
 
   return (
@@ -106,13 +156,19 @@ export function EditorPage({ currentUser }: EditorPageProps) {
               Publish
             </Button>
             
-            {/* [FIX] Sử dụng authorName thay vì name */}
             <Avatar className="h-9 w-9 border-2 border-white/50 shadow-sm cursor-pointer hover:rotate-6 transition-transform">
               <AvatarImage src={currentUser.avatar} />
               <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
             </Avatar>
           </div>
         </div>
+      </div>
+
+      {/* [THÊM] Toolbar dính ngay dưới Header */}
+      <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-md border-b">
+         <div className="max-w-[740px] mx-auto">
+            <EditorToolbar onAction={handleToolbarAction} />
+         </div>
       </div>
 
       {/* --- EDITOR BODY --- */}
@@ -134,7 +190,9 @@ export function EditorPage({ currentUser }: EditorPageProps) {
         />
 
         <div className="min-h-[500px]">
+            {/* [SỬA] Gắn ref vào TiptapEditor */}
             <TiptapEditor 
+                ref={editorRef}
                 content={content} 
                 onChange={setContent} 
                 placeholder="Hãy kể câu chuyện của bạn..."
