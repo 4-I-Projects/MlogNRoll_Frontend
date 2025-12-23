@@ -23,8 +23,8 @@ interface TopbarProps {
   currentUser: User;
 }
 
-export function Topbar({ 
-  onToggleSidebar, 
+export function Topbar({
+  onToggleSidebar,
   notificationsCount,
   searchQuery,
   onSearchChange,
@@ -32,7 +32,7 @@ export function Topbar({
 }: TopbarProps) {
   const navigate = useNavigate();
   const auth = useAuth();
-  
+
   const isAuthenticated = auth.isAuthenticated;
 
   const displayName = currentUser.displayName || auth.user?.profile.preferred_username || 'User';
@@ -44,7 +44,6 @@ export function Topbar({
     auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin });
   };
 
-  // [MỚI] Hàm xử lý khi bấm nút Write
   const handleWriteClick = () => {
     if (isAuthenticated) {
       navigate('/editor');
@@ -66,8 +65,6 @@ export function Topbar({
       transition-all duration-300
     ">
       <div className="flex h-16 items-center justify-between w-full px-4 md:px-6">
-        
-        {/* CỤM TRÁI */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="lg:hidden">
             <Menu className="h-5 w-5" />
@@ -77,10 +74,8 @@ export function Topbar({
             <span className="hidden sm:inline font-bold text-lg tracking-tight">MlognRoll</span>
           </button>
         </div>
-
-        {/* CỤM GIỮA */}
         <div className="flex-1 max-w-md mx-4 hidden md:block">
-           <div className="relative">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
@@ -91,17 +86,13 @@ export function Topbar({
             />
           </div>
         </div>
-
-        {/* CỤM PHẢI */}
         <div className="flex items-center gap-2">
-          
-          <ThemeToggle className="text-muted-foreground hover:text-primary" />
 
-          {/* [MỚI] Nút Write đặt ở đây, luôn hiển thị */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="gap-2 rounded-theme text-muted-foreground hover:text-primary" 
+          <ThemeToggle className="text-muted-foreground hover:text-primary" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 rounded-theme text-muted-foreground hover:text-primary"
             onClick={handleWriteClick}
           >
             <PenSquare className="h-4 w-4" />
@@ -121,7 +112,6 @@ export function Topbar({
             </>
           ) : (
             <>
-              {/* [ĐÃ XÓA] Nút Write cũ ở vị trí này */}
 
               <Button variant="ghost" size="icon" className="relative rounded-full" onClick={() => navigate('/')}>
                 <Bell className="h-5 w-5" />
@@ -142,7 +132,7 @@ export function Topbar({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-theme border-theme shadow-theme">
-                   <div className="flex items-center justify-start gap-2 p-2 font-medium text-sm">
+                  <div className="flex items-center justify-start gap-2 p-2 font-medium text-sm">
                     <span className="truncate">{displayName}</span>
                   </div>
                   <DropdownMenuSeparator />

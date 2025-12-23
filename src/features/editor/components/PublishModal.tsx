@@ -21,6 +21,8 @@ interface PublishModalProps {
   onClose: () => void;
   onPublish: (settings: PublishSettings) => void;
   initialSettings?: Partial<PublishSettings>;
+  // [MỚI] Thêm prop này để biết đang loading
+  isSubmitting?: boolean;
 }
 
 export interface PublishSettings {
@@ -37,6 +39,7 @@ export function PublishModal({
   onClose,
   onPublish,
   initialSettings,
+  isSubmitting = false, // [MỚI] Mặc định là false
 }: PublishModalProps) {
   const [visibility, setVisibility] = useState<PublishSettings["visibility"]>(
     initialSettings?.visibility || VISIBILITY.PUBLIC
@@ -209,11 +212,12 @@ export function PublishModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          {/* [MỚI] Disable nút khi đang submit */}
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handlePublish}>
-            {visibility === "draft"
+          <Button onClick={handlePublish} disabled={isSubmitting}>
+            {isSubmitting ? "Publishing..." : visibility === "draft"
               ? "Save Draft"
               : "Publish Now"}
           </Button>

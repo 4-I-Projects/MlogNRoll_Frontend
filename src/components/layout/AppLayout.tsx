@@ -21,12 +21,10 @@ export const AppLayout = () => {
     }
   }, [user, isLoading, error, navigate]);
 
-  // Tự động đóng sidebar khi chuyển trang trên mobile
   useEffect(() => {
     if (isMobile) setSidebarOpen(false);
   }, [location.pathname, isMobile]);
 
-  // Check resize
   useEffect(() => {
     const checkMobile = () => {
       const isMobileView = window.innerWidth < 1024;
@@ -43,14 +41,13 @@ export const AppLayout = () => {
     return <div className="h-screen flex items-center justify-center">Loading application...</div>;
   }
 
-  // [FIX] Cập nhật User mặc định đủ trường
   const defaultUser: User = {
     id: 'guest',
     username: 'guest',
     email: '',
     firstName: 'Guest',
     lastName: 'User',
-    displayName: 'Guest', // Dùng displayName thay vì name
+    displayName: 'Guest',
     avatar: '',
     bio: '',
     followersCount: 0,
@@ -71,7 +68,6 @@ export const AppLayout = () => {
       />
       
       <div className="flex">
-        {/* [FIX] Truyền className để điều khiển ẩn hiện */}
         <Sidebar 
           className={sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           isOpen={sidebarOpen} // Dùng cho overlay mobile
