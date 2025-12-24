@@ -13,7 +13,7 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { themes } from '../themes';
 import { useTheme } from '../context/ThemeContext';
 import ChatBot from '../components/ChatBot';
-// [MỚI] Import thư viện gọi API
+// Import thư viện gọi API
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
@@ -35,17 +35,17 @@ export function EditorPage({ currentUser }: EditorPageProps) {
 
   const editorRef = useRef<TiptapEditorRef>(null);
 
-  // [MỚI] Mutation để gọi API tạo bài viết (POST)
+  // Mutation để gọi API tạo bài viết (POST)
   const createPostMutation = useMutation({
     mutationFn: (postData: any) => {
-      // [FIX] Thêm 'as Promise<any>' để Typescript hiểu kết quả trả về là object dữ liệu (có id)
-      return apiClient.post('/posts', postData) as Promise<any>;
-      // return apiClient.post('/../posts', postData) as Promise<any>;
+      // Fix: Thêm 'as Promise<any>' để Typescript hiểu kết quả trả về là object dữ liệu (có id)
+      // Dùng /../posts để lùi từ baseURL (/api/v1) về (/api) nếu cần thiết, hoặc dùng /posts nếu baseURL đã chuẩn
+      return apiClient.post('/../posts', postData) as Promise<any>;
     },
     onSuccess: (data) => {
       toast.success('Đăng bài thành công! 🎉');
       setShowPublishModal(false);
-      // Lúc này 'data' được hiểu là any, nên truy cập .id thoải mái
+      // Chuyển hướng đến trang bài viết vừa tạo
       navigate(`/post/${data.id}`);
     },
     onError: (error) => {
@@ -55,13 +55,14 @@ export function EditorPage({ currentUser }: EditorPageProps) {
   });
 
   useEffect(() => {
+    // Đếm số từ (loại bỏ thẻ HTML)
     const text = content.replace(/<[^>]*>/g, '');
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     setWordCount(words);
   }, [content]);
 
+  // Giả lập auto-save
   const handleSaveDraft = () => {
-    // Logic lưu nháp tự động (có thể implement API riêng sau này)
     setIsSaving(true);
     setTimeout(() => setIsSaving(false), 800);
   };
@@ -72,75 +73,104 @@ export function EditorPage({ currentUser }: EditorPageProps) {
     return () => clearTimeout(timer);
   }, [title, subtitle, content, themeId]);
 
-  // [SỬA] Hàm xử lý khi bấm Publish thật
+  // Hàm xử lý khi bấm Publish thật
   const handlePublish = (settings: PublishSettings) => {
-    // Mapping dữ liệu từ Form sang format Backend yêu cầu
-    // Backend Java thường nhận object: { title, content, status, tags, visibility, ... }
-
-    // Mapping trạng thái
+    // Mapping trạng thái bài viết (Backend dùng Enum UPPERCASE: PUBLISHED, DRAFT)
     let status = 'PUBLISHED';
     if (settings.visibility === 'draft') {
         status = 'DRAFT';
-    } else if (settings.visibility === 'unlisted') {
-        // Nếu Backend có hỗ trợ UNLISTED hoặc ARCHIVED thì dùng, không thì map về PUBLISHED hoặc DRAFT tùy logic
-        status = 'PUBLISHED'; 
     }
-    const authorId = Number(currentUser.id) || 1; // Giả sử currentUser.id là string số
+    
+    // Xử lý AuthorID: Backend cần String UUID. 
+    // Nếu bạn đang test với ID giả "1", hãy chắc chắn Backend chấp nhận.
+    // Nếu currentUser.id từ Keycloak là UUID thật, dùng trực tiếp.
+    const authorId = currentUser.id || "c3aee945-3658-44fc-b7a1-d748e62a50ac"; 
 
+    // Payload gửi lên Backend
     const payload = {
       title: title,
-      body: content,          // [QUAN TRỌNG] Đổi 'content' thành 'body'
-      authorId: "c3aee945-3658-44fc-b7a1-d748e62a50ac",     // [BẮT BUỘC] Backend @NotNull
-      categoryId: 1,          // [BẮT BUỘC] Tạm thời hardcode Category = 1 (cần UI chọn category sau này)
+      body: content,          // Map 'content' (editor) -> 'body' (backend)
+      authorId: authorId,     // ID tác giả
+      categoryId: 1,          // Tạm hardcode Category=1 (Cần đảm bảo DB có record này)
       status: status,
-      tagIds: [1],
+      tagIds: [1],            // Tạm hardcode Tag (Cần đảm bảo DB có tag này)
     };
 
     // Gọi API
     createPostMutation.mutate(payload);
   };
 
+  // [ĐÃ SỬA] Hàm xử lý sự kiện Toolbar chuẩn chỉnh
   const handleToolbarAction = (action: string) => {
     const editor = editorRef.current?.editor;
     if (!editor) return;
 
     switch (action) {
       case 'image':
+        // Gọi hàm upload ảnh từ component con (đã expose qua ref)
         editorRef.current?.triggerImageUpload();
         break;
+        
       case 'bold':
         editor.chain().focus().toggleBold().run();
         break;
+        
       case 'italic':
         editor.chain().focus().toggleItalic().run();
         break;
+        
       case 'underline':
-        editor.chain().focus().toggleUnderline?.().run();
+        // Cần cài extension @tiptap/extension-underline
+        editor.chain().focus().toggleUnderline().run();
         break;
+        
       case 'h1':
         editor.chain().focus().toggleHeading({ level: 1 }).run();
         break;
+        
       case 'h2':
         editor.chain().focus().toggleHeading({ level: 2 }).run();
         break;
+
+      case 'h3':
+        editor.chain().focus().toggleHeading({ level: 3 }).run();
+        break;
+        
       case 'quote':
         editor.chain().focus().toggleBlockquote().run();
         break;
+        
       case 'code':
         editor.chain().focus().toggleCodeBlock().run();
         break;
+        
       case 'bulletList':
         editor.chain().focus().toggleBulletList().run();
         break;
+        
       case 'orderedList':
         editor.chain().focus().toggleOrderedList().run();
         break;
+        
       case 'undo':
         editor.chain().focus().undo().run();
         break;
+        
       case 'redo':
         editor.chain().focus().redo().run();
         break;
+
+      case 'link':
+         const previousUrl = editor.getAttributes('link').href;
+         const url = window.prompt('Nhập URL:', previousUrl);
+         if (url === null) return; // Cancelled
+         if (url === '') {
+           editor.chain().focus().extendMarkRange('link').unsetLink().run();
+           return;
+         }
+         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+         break;
+        
       default:
         console.warn('Unknown toolbar action:', action);
     }
@@ -177,7 +207,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
           <div className="flex items-center gap-4">
             <div className="hidden md:flex flex-col items-end mr-2">
               <span className="text-xs font-bold opacity-70" style={{ color: currentTheme.text }}>
-                {/* Hiển thị Saving... nếu đang auto-save HOẶC đang gọi API publish */}
                 {isSaving || createPostMutation.isPending ? 'Saving...' : 'Saved'}
               </span>
               <span className="text-[10px] opacity-50" style={{ color: currentTheme.text }}>
@@ -190,7 +219,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
               onClick={() => setShowPublishModal(true)}
               className="rounded-full px-6 font-bold shadow-lg hover:scale-105 transition-transform"
               style={{ backgroundColor: currentTheme.accent, color: '#fff' }}
-              disabled={!title || createPostMutation.isPending} // Disable khi chưa có title hoặc đang publish
+              disabled={!title || createPostMutation.isPending}
             >
               Publish
             </Button>
@@ -203,7 +232,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
         </div>
       </div>
 
-      {/* Toolbar */}
+      {/* --- TOOLBAR --- */}
       <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-md border-b">
         <div className="max-w-[740px] mx-auto">
           <EditorToolbar onAction={handleToolbarAction} />
@@ -244,7 +273,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
         onClose={() => setShowPublishModal(false)}
         onPublish={handlePublish}
         initialSettings={{ excerpt: subtitle, visibility: 'public', tags: [] }}
-        // [MỚI] Truyền trạng thái loading vào modal
         isSubmitting={createPostMutation.isPending}
       />
       <ChatBot content={content} titleSetter={setTitle} />

@@ -55,12 +55,12 @@ export function Topbar({
   return (
     <header className="
       sticky top-0 z-50 w-full 
-      bg-background/80 
-      backdrop-blur-theme
+      bg-background/70 
+      backdrop-blur-xl
       supports-[backdrop-filter]:bg-background/60 
-      rounded-theme-b
-      border-b-[length:var(--border-width-theme)] border-theme
-      drop-shadow-theme
+      rounded-b-xl
+      border-b border-white/10
+      shadow-md
       mb-6 
       transition-all duration-300
     ">
@@ -80,7 +80,7 @@ export function Topbar({
             <Input
               type="search"
               placeholder="Search..."
-              className="pl-9 bg-muted/50 border-transparent focus:bg-background transition-all rounded-theme"
+              className="pl-9 bg-muted/50 border-transparent focus:bg-background/80 transition-all rounded-full"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -92,7 +92,7 @@ export function Topbar({
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 rounded-theme text-muted-foreground hover:text-primary"
+            className="gap-2 rounded-full text-muted-foreground hover:text-primary"
             onClick={handleWriteClick}
           >
             <PenSquare className="h-4 w-4" />
@@ -101,11 +101,11 @@ export function Topbar({
 
           {!isAuthenticated ? (
             <>
-              <Button variant="ghost" size="sm" className="gap-2 rounded-theme" onClick={() => auth.signinRedirect()}>
+              <Button variant="ghost" size="sm" className="gap-2 rounded-full" onClick={() => auth.signinRedirect()}>
                 <LogIn className="h-4 w-4" />
                 <span className="hidden sm:inline">Đăng nhập</span>
               </Button>
-              <Button variant="ghost" size="sm" className="gap-2 rounded-theme" onClick={() => auth.signinRedirect({ prompt: 'create', extraQueryParams: { kc_action: 'register' } })}>
+              <Button variant="ghost" size="sm" className="gap-2 rounded-full" onClick={() => auth.signinRedirect({ prompt: 'create', extraQueryParams: { kc_action: 'register' } })}>
                 <UserPlus className="h-4 w-4" />
                 <span className="hidden sm:inline">Đăng ký</span>
               </Button>
@@ -124,24 +124,29 @@ export function Topbar({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20 transition-all">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={avatarUrl} alt={displayName} />
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20 transition-all p-0 overflow-hidden">
+                    <Avatar className="h-full w-full">
+                      <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
                       <AvatarFallback>{initial}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-theme border-theme shadow-theme">
+                
+                {/* [ĐÃ SỬA] Thêm style kính mờ (Glassmorphism) cho Dropdown Content */}
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-56 rounded-xl bg-background/70 backdrop-blur-xl border border-white/20 shadow-xl"
+                >
                   <div className="flex items-center justify-start gap-2 p-2 font-medium text-sm">
                     <span className="truncate">{displayName}</span>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>Profile</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/library')}>Library</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/stories')}>Stories</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                  <DropdownMenuSeparator className="bg-white/20" />
+                  <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer focus:bg-primary/10">Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/library')} className="cursor-pointer focus:bg-primary/10">Library</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/stories')} className="cursor-pointer focus:bg-primary/10">Stories</DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/20" />
+                  <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer focus:bg-primary/10">Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer focus:bg-destructive/10">
                     <LogOut className="mr-2 h-4 w-4" /> Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>

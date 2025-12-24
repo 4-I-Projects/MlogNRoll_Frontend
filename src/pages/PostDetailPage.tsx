@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, ArrowLeft, Eye } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Separator } from '../ui/separator';
-import { AuthorRow } from '../features/post/components/AuthorRow';
-import { CommentsPanel } from '../features/post/components/CommentsPanel';
-import { Comment } from '../features/post/types';
-import { User } from '../features/auth/types';
-import { getCommentsByPostId, mockPosts } from '../lib/mockData'; 
-import { PostCard } from '../features/feed/PostCard';
+import { Button } from '@/ui/button'; // Sửa đường dẫn import cho chuẩn alias @
+import { Badge } from '@/ui/badge';
+import { Separator } from '@/ui/separator';
+import { AuthorRow } from '@/features/post/components/AuthorRow';
+import { CommentsPanel } from '@/features/post/components/CommentsPanel';
+import { Comment } from '@/features/post/types';
+import { User } from '@/features/auth/types';
+import { getCommentsByPostId, mockPosts } from '@/lib/mockData'; 
+import { PostCard } from '@/features/feed/PostCard';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePost } from '@/features/post/api/get-post';
-import { themes } from '../themes';
+import { themes } from '@/themes';
 import { ImageWithFallback } from '@/components/common/ImageWithFallback';
 import { cn } from '@/ui/utils';
 
@@ -31,8 +31,9 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [likes, setLikes] = useState(0);
 
-  const currentThemeId = post ? (post as any).themeId || 'happy' : 'happy';
-  const theme = themes[currentThemeId as keyof typeof themes] || themes.happy;
+  // Fallback theme nếu không có
+  // const currentThemeId = post ? (post as any).themeId || 'happy' : 'happy';
+  // const theme = themes[currentThemeId as keyof typeof themes] || themes.happy;
 
   useEffect(() => {
     if (post) {
@@ -70,29 +71,35 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     setLikes(isLiked ? likes - 1 : likes + 1);
   };
 
+  // Style đè cho class 'prose' để ăn theo Theme màu của app
   const proseStyle = {
     '--tw-prose-body': 'var(--foreground)',
     '--tw-prose-headings': 'var(--foreground)',
     '--tw-prose-lead': 'var(--muted-foreground)',
-    '--tw-prose-links': 'var(--primary)',
+    '--tw-prose-links': 'hsl(var(--primary))', // Fix: dùng hsl để đúng màu primary
     '--tw-prose-bold': 'var(--foreground)',
     '--tw-prose-counters': 'var(--muted-foreground)',
     '--tw-prose-bullets': 'var(--muted-foreground)',
     '--tw-prose-hr': 'var(--border)',
     '--tw-prose-quotes': 'var(--foreground)',
-    '--tw-prose-quote-borders': 'var(--primary)',
+    '--tw-prose-quote-borders': 'hsl(var(--primary))',
     '--tw-prose-captions': 'var(--muted-foreground)',
     '--tw-prose-code': 'var(--foreground)',
     '--tw-prose-pre-code': 'var(--foreground)',
     '--tw-prose-pre-bg': 'var(--muted)', 
   } as React.CSSProperties;
 
+  // Lọc bài viết liên quan (Mock logic)
   const relatedPosts = mockPosts
     .filter((p) => p.userId === post.author?.id && p.id !== post.id)
     .slice(0, 3);
 
+  // [QUAN TRỌNG] Kiểm tra xem dùng 'body' hay 'content'
+  // Backend Post.java dùng 'body', nên ở đây ưu tiên dùng 'post.body'
+  // Nếu interface Post của bạn định nghĩa là content thì map lại ở api client hoặc sửa ở đây.
+  const postContent = (post as any).body || post.content || ''; 
+
   return (
-    // [FIX] Thêm class 'ml-5' (margin-left: 20px) vào div bao ngoài cùng
     <div className="animate-in fade-in duration-500 pb-20 pt-4 px-4 md:px-8 ml-5">
       {/* Thanh điều hướng Back */}
       <div className="max-w-[1400px] mx-auto mb-6">
@@ -121,7 +128,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
               "backdrop-blur-2xl" 
             )}
           >
-            {/* Ảnh bìa */}
+            {/* Ảnh bìa (Nếu có) */}
             {post.thumbnail && (
               <div className="w-full aspect-[21/9] relative overflow-hidden border-b border-theme">
                 <ImageWithFallback
@@ -134,48 +141,58 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
             <div className="p-8 md:p-12">
               <header className="mb-10">
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {post.tags.map((tag) => (
-                    <Badge 
-                      key={tag.id} 
-                      variant="secondary" 
-                      className="bg-muted/50 text-foreground hover:bg-muted font-normal px-3 py-1"
-                    >
-                      #{tag.name}
-                    </Badge>
-                  ))}
-                </div>
+                {/* Tags */}
+                {post.tags && post.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {post.tags.map((tag: any) => (
+                      <Badge 
+                        key={tag.id || tag} 
+                        variant="secondary" 
+                        className="bg-muted/50 text-foreground hover:bg-muted font-normal px-3 py-1"
+                      >
+                        #{tag.name || tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
 
                 <h1 className="text-4xl md:text-5xl font-extrabold leading-tight text-foreground mb-8">
                   {post.title}
                 </h1>
 
-                {post.author && (
-                   <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                {/* Author Info */}
+                <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                  {post.author ? (
                       <AuthorRow
                         author={post.author}
-                        datePublished={post.datePublished}
+                        datePublished={post.datePublished} // Kiểm tra format ngày
                         readTime={post.readTime}
                         onFollowToggle={() => {}}
                       />
-                      <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1 rounded-full">
-                        <Eye className="h-4 w-4" />
-                        <span>{post.stats?.views || 0} views</span>
-                      </div>
-                   </div>
-                )}
+                  ) : (
+                      // Fallback nếu chưa có thông tin tác giả
+                      <div className="text-sm text-muted-foreground">Unknown Author</div>
+                  )}
+                  
+                  <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1 rounded-full">
+                    <Eye className="h-4 w-4" />
+                    <span>{post.stats?.views || 0} views</span>
+                  </div>
+                </div>
               </header>
 
               <Separator className="my-10 bg-border" />
 
+              {/* [HIỂN THỊ NỘI DUNG RICH TEXT] */}
               <div 
-                className="prose prose-lg md:prose-xl dark:prose-invert max-w-none leading-relaxed"
+                className="prose prose-lg md:prose-xl dark:prose-invert max-w-none leading-relaxed break-words"
                 style={proseStyle}
-                dangerouslySetInnerHTML={{ __html: post.content }} 
+                dangerouslySetInnerHTML={{ __html: postContent }} 
               />
 
               <Separator className="my-10 bg-border" />
 
+              {/* Action Buttons */}
               <div className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-4">
                   <Button 
@@ -214,6 +231,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
                 </div>
               </div>
 
+              {/* Comments Section */}
               <div className="mt-12 bg-muted/40 rounded-2xl p-8 border border-theme/50">
                 <CommentsPanel
                   comments={comments}
@@ -227,6 +245,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
           </article>
         </main>
 
+        {/* Sidebar */}
         <aside className="space-y-8 hidden lg:block">
           {relatedPosts.length > 0 && (
             <div className="sticky top-24 space-y-6">

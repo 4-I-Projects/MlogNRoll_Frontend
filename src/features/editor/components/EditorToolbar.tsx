@@ -8,9 +8,6 @@ import {
   Code,
   Link,
   Image,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
   Undo,
   Redo,
   Heading1,
@@ -63,11 +60,7 @@ const toolbarGroups: ToolbarButton[][] = [
     { icon: <Link className="h-4 w-4" />, action: 'link', label: 'Link' },
     { icon: <Image className="h-4 w-4" />, action: 'image', label: 'Image' },
   ],
-  [
-    { icon: <AlignLeft className="h-4 w-4" />, action: 'alignLeft', label: 'Align Left' },
-    { icon: <AlignCenter className="h-4 w-4" />, action: 'alignCenter', label: 'Align Center' },
-    { icon: <AlignRight className="h-4 w-4" />, action: 'alignRight', label: 'Align Right' },
-  ],
+  // [ĐÃ XÓA] Nhóm Align vì thiếu Extension
 ];
 
 export function EditorToolbar({ onAction }: EditorToolbarProps) {
@@ -82,7 +75,7 @@ export function EditorToolbar({ onAction }: EditorToolbarProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 hover:bg-muted"
                     onClick={() => onAction(button.action)}
                   >
                     {button.icon}
