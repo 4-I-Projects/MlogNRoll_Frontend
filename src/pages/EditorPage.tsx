@@ -80,15 +80,20 @@ export function EditorPage({ currentUser }: EditorPageProps) {
     }
     
     // Xử lý AuthorID: Backend cần String UUID. 
-    const authorId = currentUser.id || "c3aee945-3658-44fc-b7a1-d748e62a50ac"; 
+    // const authorId = currentUser.id || "c3aee945-3658-44fc-b7a1-d748e62a50ac"; 
+    const authorId = "c3aee945-3658-44fc-b7a1-d748e62a50ac"; 
+
+    // [QUAN TRỌNG] Lấy ra mảng ID từ danh sách Tag objects
+    // settings.tags bây giờ là Tag[] (có chứa id và name)
+    const tagIds = settings.tags.map(tag => tag.id);
 
     const payload = {
       title: title,
-      body: content,          
-      authorId: authorId,     
-      categoryId: 1,          
+      body: content,
+      authorId: authorId,
+      categoryId: 1,
       status: status,
-      tagIds: [1],            
+      tagIds: tagIds, // Gửi mảng ID thực tế lên Backend
     };
 
     createPostMutation.mutate(payload);
@@ -249,7 +254,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
           placeholder="Tiêu đề bài viết..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="border-0 px-0 mb-4 text-[42px] md:text-[54px] leading-[1.1] font-serif font-bold tracking-tight placeholder:text-current placeholder:opacity-30 focus-visible:ring-0 bg-transparent shadow-none"
+          className="border-0 px-0 mb-4 text-[42px] md:text-[54px] leading-[1.1] font-serif font-bold tracking-tight placeholder:text-current placeholder:opacity-30 focus-visible:ring-0 bg-transparent shadow-none py-10"
           style={{ color: currentTheme.text }}
         />
 
