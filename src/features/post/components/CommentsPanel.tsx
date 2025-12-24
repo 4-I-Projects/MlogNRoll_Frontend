@@ -59,7 +59,7 @@ export function CommentsPanel({
             placeholder="What are your thoughts?"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[100px] resize-none"
+            className="min-h-[100px] resize-none text-gray-900"
             disabled={isSubmitting}
           />
           <div className="flex justify-end gap-2">

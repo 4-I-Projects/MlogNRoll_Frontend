@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, ArrowLeft, Eye } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Badge } from '@/ui/badge';
@@ -6,7 +6,7 @@ import { Separator } from '@/ui/separator';
 import { AuthorRow } from '@/features/post/components/AuthorRow';
 import { CommentsPanel } from '@/features/post/components/CommentsPanel';
 import { User } from '@/features/auth/types';
-import { mockPosts } from '@/lib/mockData'; // Giữ lại mockPosts cho Sidebar (Related Posts) tạm thời
+import { mockPosts } from '@/lib/mockData';
 import { PostCard } from '@/features/feed/PostCard';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePost } from '@/features/post/api/get-post';
@@ -14,9 +14,8 @@ import { ImageWithFallback } from '@/components/common/ImageWithFallback';
 import { cn } from '@/ui/utils';
 import { toast } from 'sonner';
 
-// [MỚI] Import React Query và API Comments thật
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getComments, createComment } from '@/features/post/api/comment-api';
+import { getComments, createComment, Comment as IComment } from '@/features/post/api/comment-api';
 
 interface PostDetailPageProps {
   currentUser: User;
@@ -28,19 +27,50 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const safePostId = postId || '';
   const queryClient = useQueryClient();
 
-  // 1. Fetch chi tiết bài viết
+  // 1. Fetch data
   const { data: post, isLoading, error } = usePost(safePostId);
 
-  // 2. Fetch danh sách Comments từ API
   const { data: commentsData } = useQuery({
     queryKey: ['comments', safePostId],
     queryFn: () => getComments(safePostId),
-    enabled: !!safePostId, // Chỉ fetch khi có ID bài viết
+    enabled: !!safePostId,
   });
 
-  const comments = commentsData?.data || [];
+  // [QUAN TRỌNG] Hàm xử lý biến danh sách phẳng (Flat) thành cây (Tree)
+  // Backend trả về: [A, B, A1(reply A), C, A2(reply A)]
+  // Frontend chuyển thành: [A { replies: [A1, A2] }, B, C]
+  const comments = useMemo(() => {
+    const flatComments = commentsData?.data || [];
+    const commentMap: Record<string, IComment> = {};
+    const roots: IComment[] = [];
 
-  // State local cho Like/Save bài viết (tạm thời)
+    // Bước 1: Copy tất cả comment vào map và khởi tạo mảng replies rỗng cho từng cái
+    // Để tránh mutate trực tiếp data của React Query, ta dùng spread operator {...c}
+    flatComments.forEach((c) => {
+      commentMap[c.id] = { ...c, replies: [] }; 
+    });
+
+    // Bước 2: Duyệt lại để nhét con vào cha
+    flatComments.forEach((c) => {
+      if (c.parentId) {
+        // Nếu là con, tìm cha nó trong map và nhét vào
+        const parent = commentMap[c.parentId];
+        if (parent) {
+          parent.replies?.push(commentMap[c.id]);
+          // Cập nhật lại replyCount nếu cần (để UI hiển thị nút View Replies)
+          parent.replyCount = (parent.replies?.length || 0);
+        }
+      } else {
+        // Nếu là cha (root), nhét vào danh sách gốc
+        roots.push(commentMap[c.id]);
+      }
+    });
+
+    // Sắp xếp comment mới nhất lên đầu (tùy chọn)
+    return roots.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [commentsData]);
+
+
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likes, setLikes] = useState(0);
@@ -52,19 +82,15 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     }
   }, [post]);
 
-  // 3. Mutation để tạo Comment/Reply mới
+  // 2. Mutations
   const createCommentMutation = useMutation({
     mutationFn: createComment,
     onSuccess: (newComment) => {
       toast.success('Đã gửi bình luận!');
-      
-      // Cách 1: Invalidate để fetch lại toàn bộ (đơn giản, an toàn nhất)
+      // Vì chúng ta đang dùng logic Build Tree từ danh sách tổng (Flat List)
+      // Nên dù là tạo Reply hay Comment gốc, ta chỉ cần invalidate 'comments'
+      // API sẽ trả về list mới có chứa comment đó, và hàm useMemo ở trên sẽ tự xếp nó vào đúng chỗ.
       queryClient.invalidateQueries({ queryKey: ['comments', safePostId] });
-      
-      // Nếu là reply, ta cũng cần invalidate query của replies cha nó
-      if (newComment.parentId) {
-         queryClient.invalidateQueries({ queryKey: ['replies', newComment.parentId] });
-      }
     },
     onError: () => {
       toast.error('Gửi bình luận thất bại. Vui lòng thử lại.');
@@ -110,14 +136,12 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <h2 className="text-xl font-semibold text-foreground">Post not found</h2>
-          <p className="text-muted-foreground">The post you're looking for doesn't exist.</p>
           <Button onClick={() => navigate('/')}>Go to Home</Button>
         </div>
       </div>
     );
   }
 
-  // Style typography
   const proseStyle = {
     '--tw-prose-body': 'var(--foreground)',
     '--tw-prose-headings': 'var(--foreground)',
@@ -135,12 +159,10 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     '--tw-prose-pre-bg': 'var(--muted)', 
   } as React.CSSProperties;
 
-  // Lọc bài viết liên quan (Vẫn dùng Mock Data cho phần này)
   const relatedPosts = mockPosts
     .filter((p) => p.userId === post.author?.id && p.id !== post.id)
     .slice(0, 3);
 
-  // Fallback an toàn cho nội dung
   const postContent = (post as any).body || post.content || ''; 
 
   return (
@@ -163,13 +185,11 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
         <main className="min-w-0">
           <article 
             className={cn(
-              "text-card-foreground",
-              "rounded-theme", 
-              "border border-theme", 
-              "shadow-md",
+              "rounded-lg border border-theme", 
+              "bg-[var(--story-item-bg)]", 
+              "backdrop-blur-sm", 
               "overflow-hidden",
-              "bg-background/90", 
-              "backdrop-blur-2xl" 
+              "text-card-foreground shadow-sm"
             )}
           >
             {/* Ảnh bìa */}
@@ -185,7 +205,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
             <div className="p-8 md:p-12">
               <header className="mb-10">
-                {/* Tags */}
                 {post.tags && post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-6">
                     {post.tags.map((tag: any) => (
@@ -204,8 +223,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
                   {post.title}
                 </h1>
 
-                {/* Author Info */}
-                <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                <div className="flex items-center justify-between pt-4 border-t border-theme">
                   {post.author ? (
                       <AuthorRow
                         author={post.author}
@@ -226,7 +244,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
               <Separator className="my-10 bg-border" />
 
-              {/* Nội dung bài viết */}
               <div 
                 className="prose prose-lg md:prose-xl dark:prose-invert max-w-none leading-relaxed break-words"
                 style={proseStyle}
@@ -235,7 +252,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
               <Separator className="my-10 bg-border" />
 
-              {/* Action Buttons */}
               <div className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-4">
                   <Button 
@@ -274,8 +290,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
                 </div>
               </div>
 
-              {/* Comments Section - Đã kết nối API thật */}
-              <div className="mt-12 bg-muted/40 rounded-2xl p-8 border border-theme/50">
+              <div className="mt-12 bg-muted/40 rounded-2xl p-8 border border-theme">
                 <CommentsPanel
                   comments={comments}
                   currentUser={currentUser}
@@ -288,7 +303,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
           </article>
         </main>
 
-        {/* Sidebar (Vẫn dùng Mock Related Posts tạm thời) */}
         <aside className="space-y-8 hidden lg:block">
           {relatedPosts.length > 0 && (
             <div className="sticky top-24 space-y-6">
