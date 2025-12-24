@@ -1,4 +1,3 @@
-// src/features/feed/PostCard.tsx
 import { Heart, MessageCircle, Bookmark } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import { Button } from '@/ui/button';
@@ -6,6 +5,7 @@ import { Post } from '@/features/post/types';
 import { ImageWithFallback } from '@/components/common/ImageWithFallback';
 import { formatDate } from '@/utils/date';
 import { cn } from '@/ui/utils';
+import { useMemo } from 'react'; // Import useMemo để tối ưu
 
 interface PostCardProps {
   post: Post;
@@ -16,16 +16,28 @@ export function PostCard({ post, onClick }: PostCardProps) {
   const formattedDate = formatDate(post.datePublished);
   const authorName = post.author?.displayName || post.author?.username || 'Unknown';
 
+  // [FIX] Hàm loại bỏ thẻ HTML để lấy văn bản thuần túy
+  const plainExcerpt = useMemo(() => {
+    const htmlContent = post.excerpt || post.body || ""; // Dùng excerpt, nếu không có thì dùng body
+    
+    // Cách 1: Dùng DOMParser (Chuẩn nhất, xử lý cả ký tự đặc biệt như &nbsp;)
+    const doc = new DOMParser().parseFromString(htmlContent, "text/html");
+    return doc.body.textContent || "";
+
+    // Cách 2 (Nếu muốn đơn giản hơn dùng Regex):
+    // return htmlContent.replace(/<[^>]+>/g, '');
+  }, [post.excerpt, post.body]);
+
   return (
     <article 
       onClick={onClick}
       className={cn(
         "group cursor-pointer p-6 mb-6",
         // [DESIGN UPDATE] Áp dụng style kính mờ giống trang Stories
-        "bg-[var(--story-item-bg)] hover:bg-[var(--hover-item-bg)]", // Nền theo theme
-        "backdrop-blur-sm", // Hiệu ứng mờ
-        "rounded-lg border border-theme", // Viền và bo góc
-        "transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" // Hiệu ứng hover
+        "bg-[var(--story-item-bg)] hover:bg-[var(--hover-item-bg)]", 
+        "backdrop-blur-sm", 
+        "rounded-lg border border-theme", 
+        "transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" 
       )}
     >
       <div className="flex gap-4">
@@ -45,15 +57,16 @@ export function PostCard({ post, onClick }: PostCardProps) {
           <h2 className="mb-2 line-clamp-2 text-xl font-bold text-foreground group-hover:text-primary transition-colors">
             {post.title}
           </h2>
+          
+          {/* [FIX] Hiển thị plainExcerpt thay vì post.excerpt thô */}
           <p className="text-muted-foreground line-clamp-3 mb-4 text-sm leading-relaxed">
-            {post.excerpt}
+            {plainExcerpt}
           </p>
 
           {/* Footer: Stats & Actions */}
           <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="bg-muted/50 px-2 py-1 rounded-md">{post.readTime || '5'} min read</span>
-              {/* Có thể thêm views ở đây nếu muốn */}
             </div>
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

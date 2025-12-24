@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { CornerDownRight, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import { Button } from '@/ui/button';
@@ -7,7 +7,7 @@ import { formatDate } from '@/utils/date';
 import { Comment as IComment } from '@/features/post/api/comment-api';
 import { useQuery } from '@tanstack/react-query';
 import { getReplies } from '@/features/post/api/comment-api';
-import { cn } from '@/ui/utils'; // Import cn để merge class
+import { cn } from '@/ui/utils';
 
 interface CommentProps {
   comment: IComment;
@@ -21,6 +21,9 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [showNestedReplies, setShowNestedReplies] = useState(false);
+  
+  // Ref để focus vào textarea khi bấm reply
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [isLiked, setIsLiked] = useState(comment.isLiked || false);
   const [likes, setLikes] = useState(comment.likeCount);
@@ -33,11 +36,60 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
   } = useQuery({
     queryKey: ['replies', comment.id],
     queryFn: () => getReplies(comment.id),
-    enabled: false, 
+    enabled: showNestedReplies, // Chỉ fetch khi mở
   });
 
   const replies = repliesData?.data || comment.replies || [];
   const hasReplies = comment.replyCount > 0 || replies.length > 0;
+
+  const displayName = comment.user?.username || 'Unknown';
+  const avatarUrl = comment.user?.avatarUrl;
+  const formattedDate = formatDate(comment.createdAt);
+
+  // --- LOGIC MỚI: XỬ LÝ NÚT REPLY ---
+  const handleReplyClick = () => {
+    setIsReplying(!isReplying);
+    
+    // Nếu đang mở form reply
+    if (!isReplying) {
+      // Nếu đây là comment con (depth > 0), tự động thêm @Tag
+      if (depth > 0) {
+        setReplyContent(`@${displayName} `);
+      } else {
+        setReplyContent('');
+      }
+      
+      // Focus vào ô nhập sau khi render
+      setTimeout(() => {
+        textareaRef.current?.focus();
+        // Đặt con trỏ về cuối dòng
+        textareaRef.current?.setSelectionRange(textareaRef.current.value.length, textareaRef.current.value.length);
+      }, 100);
+    }
+  };
+
+  // --- LOGIC MỚI: XỬ LÝ GỬI REPLY ---
+  const handleSubmitReply = () => {
+    if (replyContent.trim()) {
+      // [QUAN TRỌNG] Xác định parentId để gửi lên Server
+      // - Nếu depth = 0 (Comment gốc): parentId chính là ID của nó.
+      // - Nếu depth > 0 (Reply): parentId là ID của comment cha (Root Parent).
+      //   (Lưu ý: API trả về comment con luôn có trường `parentId` trỏ về cha gốc)
+      const rootParentId = depth === 0 ? comment.id : comment.parentId;
+
+      if (rootParentId) {
+        onReply(rootParentId, replyContent);
+        
+        setReplyContent('');
+        setIsReplying(false);
+        
+        // Nếu đang ở comment gốc, mở list reply để thấy cái mới
+        if (depth === 0) {
+            setShowNestedReplies(true);
+        }
+      }
+    }
+  };
 
   const handleToggleReplies = () => {
     if (!showNestedReplies && !repliesData && comment.replyCount > 0) {
@@ -52,25 +104,10 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
     onLike?.(comment.id);
   };
 
-  const handleSubmitReply = () => {
-    if (replyContent.trim()) {
-      onReply(comment.id, replyContent);
-      setReplyContent('');
-      setIsReplying(false);
-      
-      // [FIX] Mở list reply ngay lập tức để khi query invalidate xong, nó tự fetch và hiện ra
-      setShowNestedReplies(true); 
-    }
-  };
-
-  const formattedDate = formatDate(comment.createdAt);
-  const displayName = comment.user?.username || 'Unknown';
-  const avatarUrl = comment.user?.avatarUrl;
-
   return (
     <div className={cn("group animate-in fade-in duration-300", depth > 0 && "mt-3")}>
       <div className="flex gap-3 py-1">
-        {/* Avatar: Nhỏ dần khi depth tăng */}
+        {/* Avatar */}
         <Avatar className={cn("flex-shrink-0 mt-1", depth > 0 ? "h-7 w-7" : "h-9 w-9")}>
           <AvatarImage src={avatarUrl || undefined} alt={displayName} />
           <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
@@ -99,7 +136,7 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
              </button>
 
              <button 
-                onClick={() => setIsReplying(!isReplying)} 
+                onClick={handleReplyClick} 
                 className="font-semibold hover:underline"
              >
                 Reply
@@ -109,23 +146,23 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
           {/* Form Reply */}
           {isReplying && (
             <div className="mt-3 flex gap-3 animate-in slide-in-from-top-2 duration-200">
-               {/* Line visual guide cho form reply */}
+               {/* Line visual guide */}
                <div className="w-8 border-l-2 border-border/50 rounded-bl-lg ml-4"></div>
                
                <div className="flex-1 flex gap-2">
                   <Textarea
-                    placeholder={`Reply to ${displayName}...`}
+                    ref={textareaRef}
+                    placeholder={depth > 0 ? `Replying to ${displayName}...` : "Write a reply..."}
                     value={replyContent}
                     onChange={(e) => setReplyContent(e.target.value)}
                     className="min-h-[40px] text-sm resize-none bg-background text-foreground"
-                    autoFocus
                   />
                   <Button size="sm" onClick={handleSubmitReply}>Send</Button>
                </div>
             </div>
           )}
 
-          {/* --- KHU VỰC HIỂN THỊ REPLY (QUAN TRỌNG) --- */}
+          {/* --- HIỂN THỊ REPLIES --- */}
           {hasReplies && (
             <div className="mt-2">
               {!showNestedReplies ? (
@@ -137,9 +174,8 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
                    View {comment.replyCount || replies.length} replies
                 </button>
               ) : (
-                // [FIX UI] Thêm padding-left và border để tạo hiệu ứng cây phân cấp
                 <div className="relative pl-4 mt-2">
-                   {/* Đường kẻ dọc nối các reply */}
+                   {/* Đường kẻ dọc */}
                    <div className="absolute left-0 top-0 bottom-4 w-px bg-border/50 ml-1"></div>
 
                    {isLoadingReplies ? (
@@ -147,7 +183,7 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
                         <Loader2 className="h-3 w-3 animate-spin" /> Loading replies...
                       </div>
                    ) : (
-                      <div className="space-y-4"> {/* Tăng khoảng cách giữa các reply con */}
+                      <div className="space-y-4">
                         {replies.map((reply) => (
                             <Comment
                               key={reply.id}

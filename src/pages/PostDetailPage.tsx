@@ -36,37 +36,28 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     enabled: !!safePostId,
   });
 
-  // [QUAN TRỌNG] Hàm xử lý biến danh sách phẳng (Flat) thành cây (Tree)
-  // Backend trả về: [A, B, A1(reply A), C, A2(reply A)]
-  // Frontend chuyển thành: [A { replies: [A1, A2] }, B, C]
+  // Build Tree Comments
   const comments = useMemo(() => {
     const flatComments = commentsData?.data || [];
     const commentMap: Record<string, IComment> = {};
     const roots: IComment[] = [];
 
-    // Bước 1: Copy tất cả comment vào map và khởi tạo mảng replies rỗng cho từng cái
-    // Để tránh mutate trực tiếp data của React Query, ta dùng spread operator {...c}
     flatComments.forEach((c) => {
       commentMap[c.id] = { ...c, replies: [] }; 
     });
 
-    // Bước 2: Duyệt lại để nhét con vào cha
     flatComments.forEach((c) => {
       if (c.parentId) {
-        // Nếu là con, tìm cha nó trong map và nhét vào
         const parent = commentMap[c.parentId];
         if (parent) {
           parent.replies?.push(commentMap[c.id]);
-          // Cập nhật lại replyCount nếu cần (để UI hiển thị nút View Replies)
           parent.replyCount = (parent.replies?.length || 0);
         }
       } else {
-        // Nếu là cha (root), nhét vào danh sách gốc
         roots.push(commentMap[c.id]);
       }
     });
 
-    // Sắp xếp comment mới nhất lên đầu (tùy chọn)
     return roots.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [commentsData]);
 
@@ -87,9 +78,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     mutationFn: createComment,
     onSuccess: (newComment) => {
       toast.success('Đã gửi bình luận!');
-      // Vì chúng ta đang dùng logic Build Tree từ danh sách tổng (Flat List)
-      // Nên dù là tạo Reply hay Comment gốc, ta chỉ cần invalidate 'comments'
-      // API sẽ trả về list mới có chứa comment đó, và hàm useMemo ở trên sẽ tự xếp nó vào đúng chỗ.
       queryClient.invalidateQueries({ queryKey: ['comments', safePostId] });
     },
     onError: () => {
@@ -166,9 +154,12 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const postContent = (post as any).body || post.content || ''; 
 
   return (
-    <div className="animate-in fade-in duration-500 pb-20 pt-4 px-4 md:px-8 ml-5">
-      {/* Thanh điều hướng Back */}
-      <div className="max-w-[1400px] mx-auto mb-6">
+    // [FIX 1] Xóa `ml-5` và `px-4 md:px-6` (vì AppLayout đã có padding).
+    // Chỉ giữ lại pb/pt để chỉnh khoảng cách trên dưới.
+    <div className="animate-in fade-in duration-500 pb-20 pt-2"> 
+      
+      {/* [FIX 2] Xóa `max-w-[1400px]`, dùng `w-full` */}
+      <div className="w-full mb-6">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -180,7 +171,10 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-10 max-w-[1400px] mx-auto">
+      {/* [FIX 3] Xóa `max-w-[1400px]`, dùng `w-full`.
+         Grid: Nội dung (1fr) tự co giãn hết cỡ, Sidebar (350px) cố định.
+      */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 w-full">
         
         <main className="min-w-0">
           <article 

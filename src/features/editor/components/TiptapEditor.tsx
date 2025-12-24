@@ -41,9 +41,13 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ co
         placeholder: placeholder,
         emptyEditorClass: 'is-editor-empty before:content-[attr(data-placeholder)] before:text-gray-400 before:float-left before:pointer-events-none',
       }),
+      // Cấu hình Image để cho phép hiển thị inline
       Image.configure({
         inline: true,
         allowBase64: true,
+        HTMLAttributes: {
+          class: 'rounded-lg max-w-full h-auto shadow-sm my-4', // Style mặc định cho ảnh
+        },
       }),
       Link.configure({
         openOnClick: false,
@@ -97,6 +101,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ co
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate
     if (!file.type.startsWith('image/')) {
         toast.error("Vui lòng chỉ chọn file ảnh!");
         return;
@@ -112,12 +117,27 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ co
     const toastId = toast.loading("Đang tải ảnh lên máy chủ...");
 
     try {
-        const realUrl = await uploadImage(file);
+        const rawUrl = await uploadImage(file);
+        
+        // [QUAN TRỌNG] Xử lý URL: trim khoảng trắng
+        const realUrl = rawUrl.trim();
+
         if (editor) {
-            editor.chain().focus().setImage({ src: realUrl }).run();
+            // [QUAN TRỌNG] Chèn ảnh vào Editor
+            // Thuộc tính 'alt' được set là tên file. 
+            // Nếu ảnh lỗi (404), trình duyệt sẽ hiển thị text 'alt' này.
+            editor.chain().focus()
+                .setImage({ 
+                    src: realUrl, 
+                    alt: file.name 
+                })
+                .run();
+                
+            // Tạo dòng mới phía dưới để người dùng viết tiếp dễ dàng
             editor.chain().focus().createParagraphNear().run(); 
         }
         toast.success("Tải ảnh thành công!", { id: toastId });
+
     } catch (error: any) {
         console.error("Upload failed:", error);
         toast.error("Lỗi upload ảnh.", { id: toastId });
@@ -127,12 +147,13 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ co
     }
   };
 
-  // [SỬA LỖI] Hàm thêm link từ Floating Menu dùng HTML string cho an toàn
+  // Logic chèn link an toàn (dùng HTML string)
   const addSimpleLink = () => {
     const url = window.prompt('Nhập đường dẫn (URL):');
     if (url) {
+      const cleanUrl = url.trim();
       editor?.chain().focus()
-        .insertContent(`<a href="${url}" target="_blank">${url}</a>`)
+        .insertContent(`<a href="${cleanUrl}" target="_blank">${cleanUrl}</a>`)
         .run();
         
       editor?.chain().focus().insertContent(' ').run();
