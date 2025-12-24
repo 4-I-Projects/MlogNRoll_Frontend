@@ -9,7 +9,6 @@ export interface GetPostsParams {
   q?: string;
 }
 
-// Interface Response thô từ Backend
 export interface PostResponse {
   id: number | string;
   title: string;
@@ -27,7 +26,7 @@ export interface PostResponse {
   publishedAt?: string;
 }
 
-// [FIX] Hàm map User nội bộ để đảm bảo map đúng avatar_url -> avatar
+// [FIX] Hàm map User nội bộ
 export const mapUser = (data: any): User => ({
   id: String(data.id),
   username: data.username || 'unknown',
@@ -35,16 +34,27 @@ export const mapUser = (data: any): User => ({
   firstName: data.first_name || '',
   lastName: data.last_name || '',
   displayName: data.display_name || data.username || 'Unknown',
-  avatar: data.avatar_url || data.avatar || '', // Ưu tiên avatar_url từ BE
+  avatar: data.avatar_url || data.avatar || '',
   bio: data.bio || '',
   followersCount: data.followers_count || 0,
   followingCount: data.following_count || 0,
   isFollowing: data.is_following || false,
 });
 
-// [FIX] Hàm Map Post dùng chung
+// [MỚI] Hàm tính thời gian đọc (Word count based)
+const calculateReadTime = (content: string): number => {
+  if (!content) return 1;
+  // 1. Loại bỏ HTML tags để đếm nội dung thực
+  const cleanText = content.replace(/<[^>]+>/g, ' ');
+  // 2. Đếm số từ (tách theo khoảng trắng)
+  const wordCount = cleanText.trim().split(/\s+/).length;
+  // 3. Tốc độ đọc trung bình: 200 từ/phút
+  const time = Math.ceil(wordCount / 200);
+  // 4. Luôn trả về ít nhất 1 phút
+  return time > 0 ? time : 1;
+};
+
 export const mapPostResponse = (post: PostResponse, userMap?: Map<string, User>): Post => {
-  // [QUAN TRỌNG] Ép kiểu authorId về string để tìm trong Map
   const authorIdStr = String(post.authorId);
   
   const authorFallback: User = {
@@ -61,9 +71,9 @@ export const mapPostResponse = (post: PostResponse, userMap?: Map<string, User>)
     isFollowing: false
   };
 
-  // Tìm user trong map
   const author = userMap?.get(authorIdStr) || authorFallback;
 
+  // Tạo excerpt từ body
   const generatedExcerpt = post.body 
     ? post.body.replace(/<[^>]+>/g, '').substring(0, 150) + (post.body.length > 150 ? '...' : '') 
     : '';
@@ -80,35 +90,29 @@ export const mapPostResponse = (post: PostResponse, userMap?: Map<string, User>)
     status: (post.status ? post.status.toLowerCase() : 'draft') as any,
     tags: post.tags || [],
     thumbnail: undefined,
-    readTime: Math.ceil((post.body?.length || 0) / 1000) || 5,
+    
+    // [FIX] Sử dụng hàm tính toán mới thay vì hardcode hoặc chia length/1000
+    readTime: calculateReadTime(post.body),
+    
     stats: { likes: 0, comments: 0, views: 0 },
   };
 };
 
 export const getPosts = async (params?: GetPostsParams): Promise<Post[]> => {
-  // 1. Gọi API lấy TOÀN BỘ bài viết (Không truyền params lọc lên server vì server chưa hỗ trợ)
   const response = await apiClient.get<PostResponse[]>('/posts');
-
   const rawData = response as any;
   let postsData: PostResponse[] = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
-  if (!Array.isArray(postsData) || postsData.length === 0) {
-    return [];
-  }
+  if (!Array.isArray(postsData) || postsData.length === 0) return [];
 
-  // 2. [CLIENT-SIDE FILTERING] Lọc dữ liệu ngay tại Frontend
+  // Client-side Filtering
   if (params) {
-    // Lọc theo User ID (cho trang Stories/Profile)
     if (params.userId) {
       postsData = postsData.filter(p => String(p.authorId) === params.userId);
     }
-
-    // Lọc theo Status (cho trang Home/Stories)
     if (params.status) {
       postsData = postsData.filter(p => p.status?.toUpperCase() === params.status?.toUpperCase());
     }
-
-    // Lọc theo Search Query
     if (params.q) {
       const query = params.q.toLowerCase();
       postsData = postsData.filter(p => 
@@ -118,21 +122,16 @@ export const getPosts = async (params?: GetPostsParams): Promise<Post[]> => {
     }
   }
 
-  // 3. Client-side Aggregation (Lấy thông tin User)
+  // Client-side Aggregation
   const uniqueAuthorIds = [...new Set(postsData.map((p) => String(p.authorId)))];
-  
   const userPromises = uniqueAuthorIds.map((id) => 
     apiClient.get(`/users/${id}`).then((res) => res as any).catch(() => null)
   );
   
   const usersRaw = await Promise.all(userPromises);
   const userMap = new Map<string, User>();
-  
   usersRaw.forEach((u) => {
-    if (u && u.id) {
-      // Dùng hàm mapUser đã định nghĩa ở trên
-      userMap.set(String(u.id), mapUser(u));
-    }
+    if (u && u.id) userMap.set(String(u.id), mapUser(u));
   });
 
   return postsData.map(post => mapPostResponse(post, userMap));
@@ -142,7 +141,6 @@ export const usePosts = (params?: GetPostsParams) => {
   return useQuery({
     queryKey: ['posts', params],
     queryFn: () => getPosts(params),
-    // Chỉ fetch khi userId khác undefined (nếu params có userId). Nếu không có userId (Home), luôn fetch.
     enabled: params?.userId !== undefined ? !!params.userId : true,
   });
 };
