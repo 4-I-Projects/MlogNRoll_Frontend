@@ -4,30 +4,35 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
 import { Button } from '@/ui/button';
 import { Badge } from '@/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/ui/dropdown-menu';
-import { Post } from '@/features/post/types'; // [QUAN TRỌNG] Import type Post
+import { Post } from '@/features/post/types';
 import { User } from '@/features/auth/types';
 import { usePosts } from '@/features/post/api/get-posts';
 import { formatDate } from '@/utils/date';
+import { cn } from '@/ui/utils';
+// Giả sử file constants có sẵn, nếu chưa có bạn cứ dùng string 'published'/'draft' trực tiếp cũng được
 import { POST_STATUS } from '@/config/constants';
 
 export function Stories() {
   const navigate = useNavigate();
   const { currentUser } = useOutletContext<{ currentUser: User }>();
 
+  // Chỉ fetch khi user đã login và có ID (không phải guest)
+  const isRealUser = currentUser && currentUser.id && currentUser.id !== 'guest';
+
   // Fetch Published
   const { data: publishedStories, isLoading: loadingPublished } = usePosts({ 
-    userId: currentUser.id, 
-    status: POST_STATUS.PUBLISHED // Thay 'published'
+    userId: isRealUser ? currentUser.id : undefined, 
+    status: POST_STATUS.PUBLISHED 
   });
 
   // Fetch Drafts
   const { data: draftStories, isLoading: loadingDrafts } = usePosts({ 
-    userId: currentUser.id, 
-    status: POST_STATUS.DRAFT // Thay 'draft'
+    userId: isRealUser ? currentUser.id : undefined, 
+    status: POST_STATUS.DRAFT 
   });
 
   return (
-    <div>
+    <div className="container max-w-5xl mx-auto animate-in fade-in duration-500">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="mb-2 text-2xl font-bold text-foreground">Your Stories</h1>
@@ -54,7 +59,6 @@ export function Stories() {
             <div className="py-10">Loading...</div>
           ) : publishedStories && publishedStories.length > 0 ? (
             <div className="space-y-4">
-              {/* [FIX] Thêm kiểu (story: Post) để hết lỗi implicit any */}
               {publishedStories.map((story: Post) => (
                 <StoryItem key={story.id} story={story} />
               ))}
@@ -73,7 +77,6 @@ export function Stories() {
              <div className="py-10">Loading...</div>
           ) : draftStories && draftStories.length > 0 ? (
             <div className="space-y-4">
-              {/* [FIX] Thêm kiểu (story: Post) */}
               {draftStories.map((story: Post) => (
                 <StoryItem key={story.id} story={story} />
               ))}
@@ -89,12 +92,15 @@ export function Stories() {
 
 function StoryItem({ story }: { story: Post }) {
   const navigate = useNavigate();
-  // ... (Code StoryItem giữ nguyên như trước)
   const formattedDate = formatDate(story.datePublished || new Date().toISOString());
 
   return (
     <div 
-      className="flex gap-4 p-4 rounded-lg border border-theme bg-[var(--story-item-bg)] hover:bg-[var(--hover-item-bg)] backdrop-blur-sm transition-colors cursor-pointer"
+      className={cn(
+        "flex gap-4 p-4 rounded-lg border border-theme",
+        "bg-[var(--story-item-bg)] hover:bg-[var(--hover-item-bg)]",
+        "backdrop-blur-sm transition-colors cursor-pointer"
+      )}
       onClick={() => navigate(`/editor?id=${story.id}`)}
     >
       <div className="flex-1 min-w-0">

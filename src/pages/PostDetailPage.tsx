@@ -13,6 +13,8 @@ import { usePost } from '@/features/post/api/get-post';
 import { ImageWithFallback } from '@/components/common/ImageWithFallback';
 import { cn } from '@/ui/utils';
 import { toast } from 'sonner';
+// [MỚI] Import theme context
+import { useTheme } from '@/context/ThemeContext';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getComments, createComment, Comment as IComment } from '@/features/post/api/comment-api';
@@ -26,6 +28,8 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const { postId } = useParams();
   const safePostId = postId || '';
   const queryClient = useQueryClient();
+  // [MỚI] Lấy hàm setThemeId
+  const { setThemeId } = useTheme();
 
   // 1. Fetch data
   const { data: post, isLoading, error } = usePost(safePostId);
@@ -35,6 +39,16 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     queryFn: () => getComments(safePostId),
     enabled: !!safePostId,
   });
+
+  // [MỚI] Effect tự động đổi theme theo mood của bài viết
+  useEffect(() => {
+    if (post) {
+      // Nếu post có mood thì set, nếu không (null/undefined) thì về 'happy'
+      setThemeId(post.mood || 'happy');
+    }
+    // Optional: Bạn có thể thêm cleanup function để reset theme khi rời trang nếu muốn
+    // return () => setThemeId('happy');
+  }, [post, setThemeId]);
 
   // Build Tree Comments
   const comments = useMemo(() => {
@@ -154,11 +168,8 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const postContent = (post as any).body || post.content || ''; 
 
   return (
-    // [FIX 1] Xóa `ml-5` và `px-4 md:px-6` (vì AppLayout đã có padding).
-    // Chỉ giữ lại pb/pt để chỉnh khoảng cách trên dưới.
     <div className="animate-in fade-in duration-500 pb-20 pt-2"> 
       
-      {/* [FIX 2] Xóa `max-w-[1400px]`, dùng `w-full` */}
       <div className="w-full mb-6">
         <Button 
           variant="ghost" 
@@ -171,9 +182,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
         </Button>
       </div>
 
-      {/* [FIX 3] Xóa `max-w-[1400px]`, dùng `w-full`.
-         Grid: Nội dung (1fr) tự co giãn hết cỡ, Sidebar (350px) cố định.
-      */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 w-full">
         
         <main className="min-w-0">
@@ -186,7 +194,6 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
               "text-card-foreground shadow-sm"
             )}
           >
-            {/* Ảnh bìa */}
             {post.thumbnail && (
               <div className="w-full aspect-[21/9] relative overflow-hidden border-b border-theme">
                 <ImageWithFallback

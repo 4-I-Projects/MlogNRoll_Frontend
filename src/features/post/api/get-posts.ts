@@ -9,116 +9,140 @@ export interface GetPostsParams {
   q?: string;
 }
 
-// Interface Response thô từ Backend (PostDTO)
+// Interface Response thô từ Backend
 export interface PostResponse {
   id: number | string;
   title: string;
-  body: string;       // Backend trả về 'body'
+  body: string;
   status: string;
-  authorId?: string | number; // Backend trả về authorId
-  author_id?: string | number; // Dự phòng trường hợp snake_case
+  authorId: string | number;
   tags: Tag[];
-  created_at?: string;
-  createdAt?: string;
-  updated_at?: string;
-  publishedAt?: string;
-  
-  // Object author lồng nhau (nếu BE có trả về, hoặc do FE tự ghép vào)
-  author?: {
-    id: string;
-    username: string;
-    display_name?: string;
-    avatar_url?: string; // Quan trọng: BE trả về avatar_url
-    bio?: string;
+  category?: {
+    id: number;
+    name: string;
   };
+  mood?: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
 }
 
-// [FIX] Hàm Map dùng chung: Chuyển đổi dữ liệu Backend -> Frontend
-export const mapPostResponse = (data: PostResponse): Post => {
-  // Ưu tiên lấy object author đã được ghép
-  const authorData = data.author || {} as any;
-  const authorId = String(data.authorId || data.author_id || '');
+// [FIX] Hàm map User nội bộ để đảm bảo map đúng avatar_url -> avatar
+export const mapUser = (data: any): User => ({
+  id: String(data.id),
+  username: data.username || 'unknown',
+  email: data.email || '',
+  firstName: data.first_name || '',
+  lastName: data.last_name || '',
+  displayName: data.display_name || data.username || 'Unknown',
+  avatar: data.avatar_url || data.avatar || '', // Ưu tiên avatar_url từ BE
+  bio: data.bio || '',
+  followersCount: data.followers_count || 0,
+  followingCount: data.following_count || 0,
+  isFollowing: data.is_following || false,
+});
 
-  const mappedAuthor: User = {
-    id: authorData.id || authorId,
-    username: authorData.username || 'unknown',
-    email: '', 
-    firstName: '', 
+// [FIX] Hàm Map Post dùng chung
+export const mapPostResponse = (post: PostResponse, userMap?: Map<string, User>): Post => {
+  // [QUAN TRỌNG] Ép kiểu authorId về string để tìm trong Map
+  const authorIdStr = String(post.authorId);
+  
+  const authorFallback: User = {
+    id: authorIdStr,
+    username: 'unknown',
+    displayName: 'Unknown User',
+    avatar: '',
+    bio: '',
+    firstName: '',
     lastName: '',
-    displayName: authorData.display_name || authorData.username || 'Unknown',
-    // [KEY FIX] Map avatar_url từ backend sang avatar của frontend
-    avatar: authorData.avatar_url || authorData.avatar || '', 
-    bio: authorData.bio || '',
+    email: '',
+    followersCount: 0,
+    followingCount: 0,
+    isFollowing: false
   };
 
+  // Tìm user trong map
+  const author = userMap?.get(authorIdStr) || authorFallback;
+
+  const generatedExcerpt = post.body 
+    ? post.body.replace(/<[^>]+>/g, '').substring(0, 150) + (post.body.length > 150 ? '...' : '') 
+    : '';
+
   return {
-    id: String(data.id),
-    title: data.title,
-    content: data.body || '', // Map body -> content
-    excerpt: data.body ? data.body.replace(/<[^>]+>/g, '').substring(0, 150) + '...' : '',
-    userId: mappedAuthor.id,
-    author: mappedAuthor,
-    
-    // Xử lý ngày tháng (hỗ trợ cả snake_case và camelCase)
-    // Ưu tiên publishedAt nếu có
-    datePublished: data.publishedAt || data.created_at || data.createdAt || new Date().toISOString(),
-    
-    status: (data.status?.toLowerCase() as any) || 'draft',
-    readTime: Math.ceil((data.body?.length || 0) / 1000) || 5,
+    id: String(post.id),
+    title: post.title,
+    content: post.body, 
+    excerpt: generatedExcerpt,
+    userId: authorIdStr,
+    author: author,
+    mood: post.mood || undefined,
+    datePublished: post.publishedAt || post.createdAt,
+    status: (post.status ? post.status.toLowerCase() : 'draft') as any,
+    tags: post.tags || [],
+    thumbnail: undefined,
+    readTime: Math.ceil((post.body?.length || 0) / 1000) || 5,
     stats: { likes: 0, comments: 0, views: 0 },
-    tags: data.tags || [],
-    thumbnail: undefined
   };
 };
 
-export const getPosts = async (params: any = {}): Promise<Post[]> => {
-  // 1. Gọi API lấy danh sách bài viết
-  const response = await apiClient.get<PostResponse[]>('/posts', { params });
+export const getPosts = async (params?: GetPostsParams): Promise<Post[]> => {
+  // 1. Gọi API lấy TOÀN BỘ bài viết (Không truyền params lọc lên server vì server chưa hỗ trợ)
+  const response = await apiClient.get<PostResponse[]>('/posts');
+
   const rawData = response as any;
-  const postsData = Array.isArray(rawData) ? rawData : (rawData.data || []);
+  let postsData: PostResponse[] = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
-  if (!Array.isArray(postsData) || postsData.length === 0) return [];
+  if (!Array.isArray(postsData) || postsData.length === 0) {
+    return [];
+  }
 
-  // 2. [CLIENT-SIDE AGGREGATION] Lấy thông tin Author nếu bài viết thiếu object author
-  // Lấy danh sách ID tác giả duy nhất
-  const uniqueAuthorIds = [...new Set(postsData.map((p) => p.authorId || p.author_id).filter(Boolean))];
-  
-  if (uniqueAuthorIds.length > 0) {
-    try {
-      // Gọi API lấy thông tin từng user song song
-      const userPromises = uniqueAuthorIds.map((id) => 
-        apiClient.get(`/users/${id}`).catch(() => null)
+  // 2. [CLIENT-SIDE FILTERING] Lọc dữ liệu ngay tại Frontend
+  if (params) {
+    // Lọc theo User ID (cho trang Stories/Profile)
+    if (params.userId) {
+      postsData = postsData.filter(p => String(p.authorId) === params.userId);
+    }
+
+    // Lọc theo Status (cho trang Home/Stories)
+    if (params.status) {
+      postsData = postsData.filter(p => p.status?.toUpperCase() === params.status?.toUpperCase());
+    }
+
+    // Lọc theo Search Query
+    if (params.q) {
+      const query = params.q.toLowerCase();
+      postsData = postsData.filter(p => 
+        p.title?.toLowerCase().includes(query) || 
+        p.body?.toLowerCase().includes(query)
       );
-      
-      const usersRaw = await Promise.all(userPromises);
-      
-      // Tạo Map để tra cứu nhanh: ID -> User Data
-      const userMap = new Map();
-      usersRaw.forEach((u: any) => {
-        if (u && u.id) {
-          userMap.set(String(u.id), u);
-        }
-      });
-
-      // Ghép thông tin user vào từng bài viết
-      postsData.forEach((post) => {
-        const aId = String(post.authorId || post.author_id);
-        if (userMap.has(aId)) {
-          post.author = userMap.get(aId); // Gán raw user data vào field author
-        }
-      });
-    } catch (error) {
-      console.error("Failed to fetch authors for posts", error);
     }
   }
 
-  // 3. Map dữ liệu hoàn chỉnh về Frontend Model
-  return postsData.map(mapPostResponse);
+  // 3. Client-side Aggregation (Lấy thông tin User)
+  const uniqueAuthorIds = [...new Set(postsData.map((p) => String(p.authorId)))];
+  
+  const userPromises = uniqueAuthorIds.map((id) => 
+    apiClient.get(`/users/${id}`).then((res) => res as any).catch(() => null)
+  );
+  
+  const usersRaw = await Promise.all(userPromises);
+  const userMap = new Map<string, User>();
+  
+  usersRaw.forEach((u) => {
+    if (u && u.id) {
+      // Dùng hàm mapUser đã định nghĩa ở trên
+      userMap.set(String(u.id), mapUser(u));
+    }
+  });
+
+  return postsData.map(post => mapPostResponse(post, userMap));
 };
 
-export const usePosts = (params: any = {}) => {
+export const usePosts = (params?: GetPostsParams) => {
   return useQuery({
     queryKey: ['posts', params],
     queryFn: () => getPosts(params),
+    // Chỉ fetch khi userId khác undefined (nếu params có userId). Nếu không có userId (Home), luôn fetch.
+    enabled: params?.userId !== undefined ? !!params.userId : true,
   });
 };

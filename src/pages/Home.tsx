@@ -11,7 +11,12 @@ export function Home() {
   const navigate = useNavigate();
   const { searchQuery } = useOutletContext<HomeContext>();
   
-  const { data: posts, isLoading, error } = usePosts({ q: searchQuery });
+  // [FIX] Thêm status: 'published' để Home chỉ hiện bài đã public
+  const { data: posts, isLoading, error } = usePosts({ 
+    q: searchQuery,
+    status: 'published' 
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-6">

@@ -22,7 +22,6 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
   const [replyContent, setReplyContent] = useState('');
   const [showNestedReplies, setShowNestedReplies] = useState(false);
   
-  // Ref để focus vào textarea khi bấm reply
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [isLiked, setIsLiked] = useState(comment.isLiked || false);
@@ -36,54 +35,43 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
   } = useQuery({
     queryKey: ['replies', comment.id],
     queryFn: () => getReplies(comment.id),
-    enabled: showNestedReplies, // Chỉ fetch khi mở
+    enabled: showNestedReplies, 
   });
 
   const replies = repliesData?.data || comment.replies || [];
   const hasReplies = comment.replyCount > 0 || replies.length > 0;
 
-  const displayName = comment.user?.username || 'Unknown';
+  // [FIX] Sử dụng displayName nếu có, fallback về username
+  const displayName = comment.user?.displayName || comment.user?.username || 'Unknown';
   const avatarUrl = comment.user?.avatarUrl;
   const formattedDate = formatDate(comment.createdAt);
 
-  // --- LOGIC MỚI: XỬ LÝ NÚT REPLY ---
   const handleReplyClick = () => {
     setIsReplying(!isReplying);
     
-    // Nếu đang mở form reply
     if (!isReplying) {
-      // Nếu đây là comment con (depth > 0), tự động thêm @Tag
       if (depth > 0) {
         setReplyContent(`@${displayName} `);
       } else {
         setReplyContent('');
       }
       
-      // Focus vào ô nhập sau khi render
       setTimeout(() => {
         textareaRef.current?.focus();
-        // Đặt con trỏ về cuối dòng
         textareaRef.current?.setSelectionRange(textareaRef.current.value.length, textareaRef.current.value.length);
       }, 100);
     }
   };
 
-  // --- LOGIC MỚI: XỬ LÝ GỬI REPLY ---
   const handleSubmitReply = () => {
     if (replyContent.trim()) {
-      // [QUAN TRỌNG] Xác định parentId để gửi lên Server
-      // - Nếu depth = 0 (Comment gốc): parentId chính là ID của nó.
-      // - Nếu depth > 0 (Reply): parentId là ID của comment cha (Root Parent).
-      //   (Lưu ý: API trả về comment con luôn có trường `parentId` trỏ về cha gốc)
+      // Flatten reply logic
       const rootParentId = depth === 0 ? comment.id : comment.parentId;
 
       if (rootParentId) {
         onReply(rootParentId, replyContent);
-        
         setReplyContent('');
         setIsReplying(false);
-        
-        // Nếu đang ở comment gốc, mở list reply để thấy cái mới
         if (depth === 0) {
             setShowNestedReplies(true);
         }
@@ -107,14 +95,12 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
   return (
     <div className={cn("group animate-in fade-in duration-300", depth > 0 && "mt-3")}>
       <div className="flex gap-3 py-1">
-        {/* Avatar */}
         <Avatar className={cn("flex-shrink-0 mt-1", depth > 0 ? "h-7 w-7" : "h-9 w-9")}>
           <AvatarImage src={avatarUrl || undefined} alt={displayName} />
           <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
 
         <div className="flex-1 min-w-0">
-          {/* Bubble nội dung */}
           <div className="bg-secondary/50 rounded-2xl px-4 py-2 inline-block max-w-full">
             <div className="flex items-center gap-2 mb-0.5">
               <span className="text-sm font-semibold text-foreground">{displayName}</span>
@@ -124,7 +110,6 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
             </p>
           </div>
 
-          {/* Actions Bar */}
           <div className="flex items-center gap-4 mt-1 ml-2 text-xs text-muted-foreground">
              <span>{formattedDate}</span>
              
@@ -143,10 +128,8 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
              </button>
           </div>
 
-          {/* Form Reply */}
           {isReplying && (
             <div className="mt-3 flex gap-3 animate-in slide-in-from-top-2 duration-200">
-               {/* Line visual guide */}
                <div className="w-8 border-l-2 border-border/50 rounded-bl-lg ml-4"></div>
                
                <div className="flex-1 flex gap-2">
@@ -162,7 +145,6 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
             </div>
           )}
 
-          {/* --- HIỂN THỊ REPLIES --- */}
           {hasReplies && (
             <div className="mt-2">
               {!showNestedReplies ? (
@@ -175,7 +157,6 @@ export function Comment({ comment, depth = 0, onReply, onLike }: CommentProps) {
                 </button>
               ) : (
                 <div className="relative pl-4 mt-2">
-                   {/* Đường kẻ dọc */}
                    <div className="absolute left-0 top-0 bottom-4 w-px bg-border/50 ml-1"></div>
 
                    {isLoadingReplies ? (

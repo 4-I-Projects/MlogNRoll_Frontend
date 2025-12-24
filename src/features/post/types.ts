@@ -1,6 +1,5 @@
 import { User } from '../auth/types';
 
-// [MỚI] Định nghĩa interface Tag khớp với TagResponseDTO của Backend
 export interface Tag {
   id: string;
   name: string;
@@ -23,19 +22,20 @@ export interface Post {
   author?: User; 
   tags: Tag[]; 
   
-  datePublished: string; // Backend trả về createdAt/updatedAt, cần map sang
+  // [MỚI] Thêm trường mood
+  mood?: string; 
+  
+  datePublished: string;
   status: 'draft' | 'published' | 'unlisted' | 'scheduled';
   readTime: number;
   stats: PostStats;
   thumbnail?: string;
-  coverImage?: string; // Nếu BE có trường này
+  coverImage?: string;
   series?: string;
   
-  // Các trường trạng thái từ API tương tác (nếu có)
   isLiked?: boolean;
   isSaved?: boolean;
 }
-
 
 export interface Comment {
   id: string;
@@ -44,8 +44,8 @@ export interface Comment {
   author?: User;
   parentId: string | null;
   content: string;
-  date: string; // hoặc createdAt
-  likes: number; // hoặc likeCount
+  date: string;
+  likes: number;
   isLiked?: boolean;
   replies?: Comment[];
 }
