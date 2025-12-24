@@ -13,15 +13,18 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from 'lucide-react';
-import { Button } from '../../../ui/button';
-import { Separator } from '../../../ui/separator';
+import { Button } from '@/ui/button'; // Dùng alias @ để tránh lỗi đường dẫn tương đối
+import { Separator } from '@/ui/separator';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '../../../ui/tooltip';
+} from '@/ui/tooltip';
 
 interface EditorToolbarProps {
   onAction: (action: string) => void;
@@ -60,12 +63,11 @@ const toolbarGroups: ToolbarButton[][] = [
     { icon: <Link className="h-4 w-4" />, action: 'link', label: 'Link' },
     { icon: <Image className="h-4 w-4" />, action: 'image', label: 'Image' },
   ],
-  // [ĐÃ XÓA] Nhóm Align vì thiếu Extension
 ];
 
 export function EditorToolbar({ onAction }: EditorToolbarProps) {
   return (
-    <div className="sticky top-16 z-10 flex flex-wrap items-center gap-1 border-b bg-white p-2">
+    <div className="sticky top-16 z-10 flex flex-wrap items-center gap-1 border-b bg-background p-2">
       <TooltipProvider>
         {toolbarGroups.map((group, groupIndex) => (
           <div key={groupIndex} className="flex items-center">

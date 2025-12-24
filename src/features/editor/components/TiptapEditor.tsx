@@ -4,7 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import Underline from '@tiptap/extension-underline'; // [MỚI] Import Underline
+import Underline from '@tiptap/extension-underline';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 
@@ -46,7 +46,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ co
         allowBase64: true,
       }),
       Link.configure({
-        openOnClick: false, // Để editor dễ click sửa text
+        openOnClick: false,
         autolink: true,
         defaultProtocol: 'https',
         HTMLAttributes: {
@@ -55,7 +55,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ co
           class: 'text-blue-600 hover:underline cursor-pointer',
         },
       }),
-      Underline, // [MỚI] Thêm Underline vào đây
+      Underline,
       BubbleMenuExtension,
       FloatingMenuExtension,
     ],
@@ -76,10 +76,8 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ co
     },
   });
 
-  // Sync content từ ngoài vào (nếu cần load draft)
   useEffect(() => {
     if (editor && content && editor.getHTML() !== content) {
-        // Chỉ set nếu nội dung thực sự khác và editor đang trống (tránh loop)
         if (editor.getText().trim() === '') {
             editor.commands.setContent(content);
         }
@@ -129,10 +127,15 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({ co
     }
   };
 
+  // [SỬA LỖI] Hàm thêm link từ Floating Menu dùng HTML string cho an toàn
   const addSimpleLink = () => {
     const url = window.prompt('Nhập đường dẫn (URL):');
     if (url) {
-      editor?.chain().focus().setLink({ href: url }).run();
+      editor?.chain().focus()
+        .insertContent(`<a href="${url}" target="_blank">${url}</a>`)
+        .run();
+        
+      editor?.chain().focus().insertContent(' ').run();
     }
     setShowPlusMenu(false);
   };

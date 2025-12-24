@@ -39,8 +39,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
   const createPostMutation = useMutation({
     mutationFn: (postData: any) => {
       // Fix: Thêm 'as Promise<any>' để Typescript hiểu kết quả trả về là object dữ liệu (có id)
-      // Dùng /../posts để lùi từ baseURL (/api/v1) về (/api) nếu cần thiết, hoặc dùng /posts nếu baseURL đã chuẩn
-      return apiClient.post('/../posts', postData) as Promise<any>;
+      return apiClient.post('/posts', postData) as Promise<any>;
     },
     onSuccess: (data) => {
       toast.success('Đăng bài thành công! 🎉');
@@ -75,28 +74,23 @@ export function EditorPage({ currentUser }: EditorPageProps) {
 
   // Hàm xử lý khi bấm Publish thật
   const handlePublish = (settings: PublishSettings) => {
-    // Mapping trạng thái bài viết (Backend dùng Enum UPPERCASE: PUBLISHED, DRAFT)
     let status = 'PUBLISHED';
     if (settings.visibility === 'draft') {
         status = 'DRAFT';
     }
     
     // Xử lý AuthorID: Backend cần String UUID. 
-    // Nếu bạn đang test với ID giả "1", hãy chắc chắn Backend chấp nhận.
-    // Nếu currentUser.id từ Keycloak là UUID thật, dùng trực tiếp.
     const authorId = currentUser.id || "c3aee945-3658-44fc-b7a1-d748e62a50ac"; 
 
-    // Payload gửi lên Backend
     const payload = {
       title: title,
-      body: content,          // Map 'content' (editor) -> 'body' (backend)
-      authorId: authorId,     // ID tác giả
-      categoryId: 1,          // Tạm hardcode Category=1 (Cần đảm bảo DB có record này)
+      body: content,          
+      authorId: authorId,     
+      categoryId: 1,          
       status: status,
-      tagIds: [1],            // Tạm hardcode Tag (Cần đảm bảo DB có tag này)
+      tagIds: [1],            
     };
 
-    // Gọi API
     createPostMutation.mutate(payload);
   };
 
@@ -107,7 +101,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
 
     switch (action) {
       case 'image':
-        // Gọi hàm upload ảnh từ component con (đã expose qua ref)
         editorRef.current?.triggerImageUpload();
         break;
         
@@ -120,8 +113,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
         break;
         
       case 'underline':
-        // Cần cài extension @tiptap/extension-underline
-        editor.chain().focus().toggleUnderline().run();
+        editor.chain().focus().toggleUnderline?.().run();
         break;
         
       case 'h1':
@@ -160,15 +152,27 @@ export function EditorPage({ currentUser }: EditorPageProps) {
         editor.chain().focus().redo().run();
         break;
 
+      // [FIX] Xử lý Link thông minh: Không chọn text thì tự chèn text link
       case 'link':
          const previousUrl = editor.getAttributes('link').href;
          const url = window.prompt('Nhập URL:', previousUrl);
+         
          if (url === null) return; // Cancelled
+         
          if (url === '') {
            editor.chain().focus().extendMarkRange('link').unsetLink().run();
            return;
          }
-         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+
+         // Nếu đang bôi đen text -> Gắn link vào text đó
+         if (!editor.state.selection.empty) {
+            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+         } else {
+            // Nếu KHÔNG bôi đen -> Chèn URL vào vị trí con trỏ dưới dạng thẻ a
+            editor.chain().focus()
+                .insertContent(`<a href="${url}" target="_blank">${url}</a>`)
+                .run();
+         }
          break;
         
       default:
@@ -232,7 +236,7 @@ export function EditorPage({ currentUser }: EditorPageProps) {
         </div>
       </div>
 
-      {/* --- TOOLBAR --- */}
+      {/* Toolbar */}
       <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-md border-b">
         <div className="max-w-[740px] mx-auto">
           <EditorToolbar onAction={handleToolbarAction} />
