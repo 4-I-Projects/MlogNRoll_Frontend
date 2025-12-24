@@ -1,18 +1,21 @@
 // src/features/post/components/CommentsPanel.tsx
 import { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
-import { Button } from '../../../ui/button';
-import { Textarea } from '../../../ui/textarea';
-import { Comment } from './Comment';
-import { Comment as IComment } from '../types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
+import { Button } from '@/ui/button';
+import { Textarea } from '@/ui/textarea';
+import { Comment as CommentComponent } from './Comment';
+import { Comment } from '@/features/post/api/comment-api'; // [MỚI] Import Type từ API
 import { User } from '@/features/auth/types';
 
 interface CommentsPanelProps {
-  comments: IComment[];
+  comments: Comment[];
   currentUser: User;
-  onAddComment: (content: string) => void;
-  onReply: (commentId: string, content: string) => void;
+  onAddComment: (content: string) => void; 
+  // onReply cần nhận parentId để biết reply cho ai
+  onReply: (parentId: string, content: string) => void; 
   onLike: (commentId: string) => void;
+  // [MỚI] Thêm hàm load reply
+  onLoadReplies?: (commentId: string) => void; 
 }
 
 export function CommentsPanel({ 
@@ -20,14 +23,21 @@ export function CommentsPanel({
   currentUser, 
   onAddComment, 
   onReply, 
-  onLike 
+  onLike,
+  onLoadReplies
 }: CommentsPanelProps) {
   const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false); // UI state
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (newComment.trim()) {
-      onAddComment(newComment);
-      setNewComment('');
+      setIsSubmitting(true);
+      try {
+        await onAddComment(newComment); // Chờ API
+        setNewComment('');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -41,7 +51,7 @@ export function CommentsPanel({
       <div className="mb-8 flex gap-4">
         <Avatar className="h-10 w-10 flex-shrink-0">
           <AvatarImage src={currentUser.avatar} alt={userName} />
-          <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
+          <AvatarFallback>{userName?.charAt(0)}</AvatarFallback>
         </Avatar>
 
         <div className="flex-1 space-y-3">
@@ -50,31 +60,34 @@ export function CommentsPanel({
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             className="min-h-[100px] resize-none"
+            disabled={isSubmitting}
           />
           <div className="flex justify-end gap-2">
             {newComment && (
               <Button 
                 variant="ghost" 
                 onClick={() => setNewComment('')}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
             )}
-            <Button onClick={handleSubmit} disabled={!newComment.trim()}>
-              Post Comment
+            <Button onClick={handleSubmit} disabled={!newComment.trim() || isSubmitting}>
+              {isSubmitting ? 'Posting...' : 'Post Comment'}
             </Button>
           </div>
         </div>
       </div>
 
       {/* Comments list */}
-      <div className="space-y-2">
+      <div className="space-y-6"> {/* Tăng khoảng cách */}
         {comments.map((comment) => (
-          <Comment
+          <CommentComponent
             key={comment.id}
             comment={comment}
             onReply={onReply}
             onLike={onLike}
+            onLoadReplies={onLoadReplies}
           />
         ))}
       </div>

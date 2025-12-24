@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, ArrowLeft, Eye } from 'lucide-react';
-import { Button } from '@/ui/button'; // Sửa đường dẫn import cho chuẩn alias @
+import { Button } from '@/ui/button';
 import { Badge } from '@/ui/badge';
 import { Separator } from '@/ui/separator';
 import { AuthorRow } from '@/features/post/components/AuthorRow';
 import { CommentsPanel } from '@/features/post/components/CommentsPanel';
-import { Comment } from '@/features/post/types';
 import { User } from '@/features/auth/types';
-import { getCommentsByPostId, mockPosts } from '@/lib/mockData'; 
+import { mockPosts } from '@/lib/mockData'; // Giữ lại mockPosts cho Sidebar (Related Posts) tạm thời
 import { PostCard } from '@/features/feed/PostCard';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePost } from '@/features/post/api/get-post';
-import { themes } from '@/themes';
 import { ImageWithFallback } from '@/components/common/ImageWithFallback';
 import { cn } from '@/ui/utils';
+import { toast } from 'sonner';
+
+// [MỚI] Import React Query và API Comments thật
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getComments, createComment } from '@/features/post/api/comment-api';
 
 interface PostDetailPageProps {
   currentUser: User;
@@ -23,25 +26,73 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
   const navigate = useNavigate();
   const { postId } = useParams();
   const safePostId = postId || '';
+  const queryClient = useQueryClient();
 
+  // 1. Fetch chi tiết bài viết
   const { data: post, isLoading, error } = usePost(safePostId);
 
-  const [comments, setComments] = useState<Comment[]>([]);
+  // 2. Fetch danh sách Comments từ API
+  const { data: commentsData } = useQuery({
+    queryKey: ['comments', safePostId],
+    queryFn: () => getComments(safePostId),
+    enabled: !!safePostId, // Chỉ fetch khi có ID bài viết
+  });
+
+  const comments = commentsData?.data || [];
+
+  // State local cho Like/Save bài viết (tạm thời)
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likes, setLikes] = useState(0);
-
-  // Fallback theme nếu không có
-  // const currentThemeId = post ? (post as any).themeId || 'happy' : 'happy';
-  // const theme = themes[currentThemeId as keyof typeof themes] || themes.happy;
 
   useEffect(() => {
     if (post) {
       setLikes(post.stats?.likes || 0);
       setIsLiked(post.isLiked || false);
-      setComments(getCommentsByPostId(safePostId));
     }
-  }, [post, safePostId]);
+  }, [post]);
+
+  // 3. Mutation để tạo Comment/Reply mới
+  const createCommentMutation = useMutation({
+    mutationFn: createComment,
+    onSuccess: (newComment) => {
+      toast.success('Đã gửi bình luận!');
+      
+      // Cách 1: Invalidate để fetch lại toàn bộ (đơn giản, an toàn nhất)
+      queryClient.invalidateQueries({ queryKey: ['comments', safePostId] });
+      
+      // Nếu là reply, ta cũng cần invalidate query của replies cha nó
+      if (newComment.parentId) {
+         queryClient.invalidateQueries({ queryKey: ['replies', newComment.parentId] });
+      }
+    },
+    onError: () => {
+      toast.error('Gửi bình luận thất bại. Vui lòng thử lại.');
+    }
+  });
+
+  const handleAddComment = (content: string) => {
+    if (!safePostId) return;
+    createCommentMutation.mutate({
+      postId: Number(safePostId),
+      content: content,
+      parentId: undefined
+    });
+  };
+
+  const handleReply = (parentId: string, content: string) => {
+    if (!safePostId) return;
+    createCommentMutation.mutate({
+      postId: Number(safePostId),
+      content: content,
+      parentId: parentId
+    });
+  };
+
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+    setLikes(isLiked ? likes - 1 : likes + 1);
+  };
 
   if (isLoading) {
     return (
@@ -66,17 +117,12 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     );
   }
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikes(isLiked ? likes - 1 : likes + 1);
-  };
-
-  // Style đè cho class 'prose' để ăn theo Theme màu của app
+  // Style typography
   const proseStyle = {
     '--tw-prose-body': 'var(--foreground)',
     '--tw-prose-headings': 'var(--foreground)',
     '--tw-prose-lead': 'var(--muted-foreground)',
-    '--tw-prose-links': 'hsl(var(--primary))', // Fix: dùng hsl để đúng màu primary
+    '--tw-prose-links': 'hsl(var(--primary))',
     '--tw-prose-bold': 'var(--foreground)',
     '--tw-prose-counters': 'var(--muted-foreground)',
     '--tw-prose-bullets': 'var(--muted-foreground)',
@@ -89,14 +135,12 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     '--tw-prose-pre-bg': 'var(--muted)', 
   } as React.CSSProperties;
 
-  // Lọc bài viết liên quan (Mock logic)
+  // Lọc bài viết liên quan (Vẫn dùng Mock Data cho phần này)
   const relatedPosts = mockPosts
     .filter((p) => p.userId === post.author?.id && p.id !== post.id)
     .slice(0, 3);
 
-  // [QUAN TRỌNG] Kiểm tra xem dùng 'body' hay 'content'
-  // Backend Post.java dùng 'body', nên ở đây ưu tiên dùng 'post.body'
-  // Nếu interface Post của bạn định nghĩa là content thì map lại ở api client hoặc sửa ở đây.
+  // Fallback an toàn cho nội dung
   const postContent = (post as any).body || post.content || ''; 
 
   return (
@@ -128,7 +172,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
               "backdrop-blur-2xl" 
             )}
           >
-            {/* Ảnh bìa (Nếu có) */}
+            {/* Ảnh bìa */}
             {post.thumbnail && (
               <div className="w-full aspect-[21/9] relative overflow-hidden border-b border-theme">
                 <ImageWithFallback
@@ -165,12 +209,11 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
                   {post.author ? (
                       <AuthorRow
                         author={post.author}
-                        datePublished={post.datePublished} // Kiểm tra format ngày
+                        datePublished={post.datePublished}
                         readTime={post.readTime}
                         onFollowToggle={() => {}}
                       />
                   ) : (
-                      // Fallback nếu chưa có thông tin tác giả
                       <div className="text-sm text-muted-foreground">Unknown Author</div>
                   )}
                   
@@ -183,7 +226,7 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
 
               <Separator className="my-10 bg-border" />
 
-              {/* [HIỂN THỊ NỘI DUNG RICH TEXT] */}
+              {/* Nội dung bài viết */}
               <div 
                 className="prose prose-lg md:prose-xl dark:prose-invert max-w-none leading-relaxed break-words"
                 style={proseStyle}
@@ -231,21 +274,21 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
                 </div>
               </div>
 
-              {/* Comments Section */}
+              {/* Comments Section - Đã kết nối API thật */}
               <div className="mt-12 bg-muted/40 rounded-2xl p-8 border border-theme/50">
                 <CommentsPanel
                   comments={comments}
                   currentUser={currentUser}
-                  onAddComment={(content) => { console.log('Add:', content) }}
-                  onReply={(id, content) => { console.log('Reply:', id, content) }}
-                  onLike={(id) => { console.log('Like:', id) }}
+                  onAddComment={handleAddComment}
+                  onReply={handleReply}
+                  onLike={(id) => { console.log('Like comment feature pending:', id) }}
                 />
               </div>
             </div>
           </article>
         </main>
 
-        {/* Sidebar */}
+        {/* Sidebar (Vẫn dùng Mock Related Posts tạm thời) */}
         <aside className="space-y-8 hidden lg:block">
           {relatedPosts.length > 0 && (
             <div className="sticky top-24 space-y-6">
