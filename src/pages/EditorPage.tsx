@@ -81,7 +81,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
     
     // Xử lý AuthorID: Backend cần String UUID. 
     // const authorId = currentUser.id || "c3aee945-3658-44fc-b7a1-d748e62a50ac"; 
-    const authorId = "c3aee945-3658-44fc-b7a1-d748e62a50ac"; 
 
     // [QUAN TRỌNG] Lấy ra mảng ID từ danh sách Tag objects
     // settings.tags bây giờ là Tag[] (có chứa id và name)
@@ -90,7 +89,6 @@ export function EditorPage({ currentUser }: EditorPageProps) {
     const payload = {
       title: title,
       body: content,
-      authorId: authorId,
       categoryId: 1,
       status: status,
       tagIds: tagIds, // Gửi mảng ID thực tế lên Backend

@@ -5,7 +5,7 @@ import { Post } from '@/features/post/types';
 import { ImageWithFallback } from '@/components/common/ImageWithFallback';
 import { formatDate } from '@/utils/date';
 import { cn } from '@/ui/utils';
-import { useMemo } from 'react'; // Import useMemo để tối ưu
+import { useMemo } from 'react';
 
 interface PostCardProps {
   post: Post;
@@ -16,24 +16,20 @@ export function PostCard({ post, onClick }: PostCardProps) {
   const formattedDate = formatDate(post.datePublished);
   const authorName = post.author?.displayName || post.author?.username || 'Unknown';
 
-  // [FIX] Hàm loại bỏ thẻ HTML để lấy văn bản thuần túy
+  // [FIX] Sửa 'post.body' thành 'post.content' để khớp với Type Post và dữ liệu đã map
   const plainExcerpt = useMemo(() => {
-    const htmlContent = post.excerpt || post.body || ""; // Dùng excerpt, nếu không có thì dùng body
+    const htmlContent = post.excerpt || post.content || ""; 
     
-    // Cách 1: Dùng DOMParser (Chuẩn nhất, xử lý cả ký tự đặc biệt như &nbsp;)
+    // Dùng DOMParser để loại bỏ thẻ HTML an toàn
     const doc = new DOMParser().parseFromString(htmlContent, "text/html");
     return doc.body.textContent || "";
-
-    // Cách 2 (Nếu muốn đơn giản hơn dùng Regex):
-    // return htmlContent.replace(/<[^>]+>/g, '');
-  }, [post.excerpt, post.body]);
+  }, [post.excerpt, post.content]);
 
   return (
     <article 
       onClick={onClick}
       className={cn(
         "group cursor-pointer p-6 mb-6",
-        // [DESIGN UPDATE] Áp dụng style kính mờ giống trang Stories
         "bg-[var(--story-item-bg)] hover:bg-[var(--hover-item-bg)]", 
         "backdrop-blur-sm", 
         "rounded-lg border border-theme", 
@@ -45,6 +41,7 @@ export function PostCard({ post, onClick }: PostCardProps) {
           {/* Header: Author Info */}
           <div className="flex items-center gap-2 mb-3">
             <Avatar className="h-6 w-6 ring-2 ring-transparent group-hover:ring-theme/20 transition-all">
+              {/* Avatar Image đã được map đúng ở API */}
               <AvatarImage src={post.author?.avatar} alt={authorName} />
               <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
             </Avatar>
@@ -58,40 +55,24 @@ export function PostCard({ post, onClick }: PostCardProps) {
             {post.title}
           </h2>
           
-          {/* [FIX] Hiển thị plainExcerpt thay vì post.excerpt thô */}
           <p className="text-muted-foreground line-clamp-3 mb-4 text-sm leading-relaxed">
             {plainExcerpt}
           </p>
 
-          {/* Footer: Stats & Actions */}
+          {/* Footer */}
           <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="bg-muted/50 px-2 py-1 rounded-md">{post.readTime || '5'} min read</span>
             </div>
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-full hover:bg-theme/10 hover:text-primary"
-                onClick={(e) => { e.stopPropagation(); /* Logic like */ }}
-              >
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-theme/10 hover:text-primary">
                 <Heart className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-full hover:bg-theme/10 hover:text-primary"
-                onClick={(e) => { e.stopPropagation(); /* Logic comment */ }}
-              >
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-theme/10 hover:text-primary">
                 <MessageCircle className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-full hover:bg-theme/10 hover:text-primary"
-                onClick={(e) => { e.stopPropagation(); /* Logic save */ }}
-              >
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-theme/10 hover:text-primary">
                 <Bookmark className="h-4 w-4" />
               </Button>
             </div>

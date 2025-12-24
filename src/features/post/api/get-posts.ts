@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Post, Tag } from '../types';
 import { User } from '@/features/auth/types';
-import { mapUserFromBE } from '@/features/auth/api/get-user';
 
 export interface GetPostsParams {
   userId?: string;
@@ -10,99 +9,114 @@ export interface GetPostsParams {
   q?: string;
 }
 
-// [QUAN TRỌNG] Interface này phải khớp 100% với PostResponse.java ở Backend
-// Backend: Long id, String title, String body, Long authorId, ...
-interface PostDTO {
-  id: number;          // Backend đang trả về Long
+// Interface Response thô từ Backend (PostDTO)
+export interface PostResponse {
+  id: number | string;
   title: string;
-  body: string;        // Backend dùng 'body', không phải 'content'
-  status: string;      // Backend thường trả về UPPERCASE (PUBLISHED)
-  authorId: string | number; // Backend trả về authorId. Để string | number để an toàn khi bạn đổi DB
+  body: string;       // Backend trả về 'body'
+  status: string;
+  authorId?: string | number; // Backend trả về authorId
+  author_id?: string | number; // Dự phòng trường hợp snake_case
   tags: Tag[];
-  category?: {         // Backend trả về object category
-    id: number;
-    name: string;
-  };
-  createdAt: string;
-  updatedAt: string;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
   publishedAt?: string;
+  
+  // Object author lồng nhau (nếu BE có trả về, hoặc do FE tự ghép vào)
+  author?: {
+    id: string;
+    username: string;
+    display_name?: string;
+    avatar_url?: string; // Quan trọng: BE trả về avatar_url
+    bio?: string;
+  };
 }
 
-export const getPosts = async (params?: GetPostsParams): Promise<Post[]> => {
-  // 1. Gọi API Content Service
-  // Lưu ý: Đường dẫn '/content/posts' giả định bạn đã config Gateway trỏ vào Content Service
-  // Nếu Gateway map '/api/v1/posts' thẳng vào content-service, bạn có thể chỉ cần gọi '/posts'
-  const response = await apiClient.get<PostDTO[]>('/posts', {
-    params: params 
-  });
+// [FIX] Hàm Map dùng chung: Chuyển đổi dữ liệu Backend -> Frontend
+export const mapPostResponse = (data: PostResponse): Post => {
+  // Ưu tiên lấy object author đã được ghép
+  const authorData = data.author || {} as any;
+  const authorId = String(data.authorId || data.author_id || '');
 
-  // Xử lý linh hoạt dữ liệu trả về từ Axios Interceptor
-  // Ép kiểu 'unknown' trước khi 'as any' để tránh lỗi eslint nếu có, 
-  // hoặc check kỹ xem interceptor của bạn trả về data hay response object
-  const rawData = response as any;
-  const postsData: PostDTO[] = Array.isArray(rawData) ? rawData : (rawData.data || []);
+  const mappedAuthor: User = {
+    id: authorData.id || authorId,
+    username: authorData.username || 'unknown',
+    email: '', 
+    firstName: '', 
+    lastName: '',
+    displayName: authorData.display_name || authorData.username || 'Unknown',
+    // [KEY FIX] Map avatar_url từ backend sang avatar của frontend
+    avatar: authorData.avatar_url || authorData.avatar || '', 
+    bio: authorData.bio || '',
+  };
 
-  if (!Array.isArray(postsData) || postsData.length === 0) {
-    return [];
-  }
-
-  // 2. Client-side Aggregation (Lấy thông tin User)
-  // Lấy danh sách authorId duy nhất từ bài viết
-  const uniqueAuthorIds = [...new Set(postsData.map((p) => p.authorId))];
-  
-  const userPromises = uniqueAuthorIds.map((id) => 
-    apiClient.get(`/users/${id}`)
-      .then((res) => res as any) 
-      .catch(() => null)
-  );
-  
-  const usersRaw = await Promise.all(userPromises);
-  
-  // Map authorId -> User Object
-  const userMap = new Map<string | number, User>();
-  usersRaw.forEach((u) => {
-    if (u && u.id) {
-      userMap.set(u.id, mapUserFromBE(u));
-    }
-  });
-
-  // 3. Map dữ liệu Backend về Frontend Model
-  return postsData.map((post) => {
-    // Tìm user trong map, nếu không thấy thì dùng fallback
-    const author = userMap.get(post.authorId) || {
-      id: String(post.authorId),
-      username: 'unknown',
-      displayName: 'Unknown User',
-      avatar: '',
-      bio: '',
-    } as User;
-
-    // Tự động tạo đoạn trích (excerpt) từ body nếu backend không gửi về
-    const generatedExcerpt = post.body 
-      ? post.body.substring(0, 150) + (post.body.length > 150 ? '...' : '') 
-      : '';
-
-    return {
-      id: String(post.id), // FE thường dùng string cho ID để thống nhất
-      title: post.title,
-      // Map 'body' của BE sang 'content' của FE
-      content: post.body, 
-      excerpt: generatedExcerpt,
-      userId: String(post.authorId),
-      author: author,
-      // Ưu tiên dùng publishedAt cho ngày hiển thị, nếu không có thì dùng createdAt
-      datePublished: post.publishedAt || post.createdAt,
-      // Chuyển status từ UPPERCASE (BE) sang lowercase (FE) nếu cần
-      status: (post.status ? post.status.toLowerCase() : 'draft') as any,
-      tags: post.tags || [],
-      thumbnail: undefined, // Backend hiện tại chưa thấy trả về thumbnail
-      readTime: Math.ceil((post.body?.length || 0) / 1000) || 5, // Tính giả định thời gian đọc
-      stats: { likes: 0, comments: 0, views: 0 }, // Engagement service chưa kết nối
-    };
-  });
+  return {
+    id: String(data.id),
+    title: data.title,
+    content: data.body || '', // Map body -> content
+    excerpt: data.body ? data.body.replace(/<[^>]+>/g, '').substring(0, 150) + '...' : '',
+    userId: mappedAuthor.id,
+    author: mappedAuthor,
+    
+    // Xử lý ngày tháng (hỗ trợ cả snake_case và camelCase)
+    // Ưu tiên publishedAt nếu có
+    datePublished: data.publishedAt || data.created_at || data.createdAt || new Date().toISOString(),
+    
+    status: (data.status?.toLowerCase() as any) || 'draft',
+    readTime: Math.ceil((data.body?.length || 0) / 1000) || 5,
+    stats: { likes: 0, comments: 0, views: 0 },
+    tags: data.tags || [],
+    thumbnail: undefined
+  };
 };
 
-export const usePosts = (params?: GetPostsParams) => {
+export const getPosts = async (params: any = {}): Promise<Post[]> => {
+  // 1. Gọi API lấy danh sách bài viết
+  const response = await apiClient.get<PostResponse[]>('/posts', { params });
+  const rawData = response as any;
+  const postsData = Array.isArray(rawData) ? rawData : (rawData.data || []);
+
+  if (!Array.isArray(postsData) || postsData.length === 0) return [];
+
+  // 2. [CLIENT-SIDE AGGREGATION] Lấy thông tin Author nếu bài viết thiếu object author
+  // Lấy danh sách ID tác giả duy nhất
+  const uniqueAuthorIds = [...new Set(postsData.map((p) => p.authorId || p.author_id).filter(Boolean))];
+  
+  if (uniqueAuthorIds.length > 0) {
+    try {
+      // Gọi API lấy thông tin từng user song song
+      const userPromises = uniqueAuthorIds.map((id) => 
+        apiClient.get(`/users/${id}`).catch(() => null)
+      );
+      
+      const usersRaw = await Promise.all(userPromises);
+      
+      // Tạo Map để tra cứu nhanh: ID -> User Data
+      const userMap = new Map();
+      usersRaw.forEach((u: any) => {
+        if (u && u.id) {
+          userMap.set(String(u.id), u);
+        }
+      });
+
+      // Ghép thông tin user vào từng bài viết
+      postsData.forEach((post) => {
+        const aId = String(post.authorId || post.author_id);
+        if (userMap.has(aId)) {
+          post.author = userMap.get(aId); // Gán raw user data vào field author
+        }
+      });
+    } catch (error) {
+      console.error("Failed to fetch authors for posts", error);
+    }
+  }
+
+  // 3. Map dữ liệu hoàn chỉnh về Frontend Model
+  return postsData.map(mapPostResponse);
+};
+
+export const usePosts = (params: any = {}) => {
   return useQuery({
     queryKey: ['posts', params],
     queryFn: () => getPosts(params),
