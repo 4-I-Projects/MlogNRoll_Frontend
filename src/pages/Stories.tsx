@@ -1,4 +1,5 @@
-import { FileText, Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { useState } from 'react'; 
+import { FileText, Eye, Edit, Trash2, MoreVertical, AlertTriangle } from 'lucide-react'; 
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
 import { Button } from '@/ui/button';
@@ -7,29 +8,60 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Post } from '@/features/post/types';
 import { User } from '@/features/auth/types';
 import { usePosts } from '@/features/post/api/get-posts';
+import { useDeletePost } from '@/features/post/api/delete-post'; 
 import { formatDate } from '@/utils/date';
-import { cn } from '@/ui/utils';
-// Giả sử file constants có sẵn, nếu chưa có bạn cứ dùng string 'published'/'draft' trực tiếp cũng được
 import { POST_STATUS } from '@/config/constants';
+import { useQueryClient } from '@tanstack/react-query'; 
+import { toast } from 'sonner'; 
+import { cn } from '@/ui/utils'; 
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/ui/alert-dialog';
 
 export function Stories() {
   const navigate = useNavigate();
   const { currentUser } = useOutletContext<{ currentUser: User }>();
+  const queryClient = useQueryClient(); 
 
-  // Chỉ fetch khi user đã login và có ID (không phải guest)
-  const isRealUser = currentUser && currentUser.id && currentUser.id !== 'guest';
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null);
 
   // Fetch Published
   const { data: publishedStories, isLoading: loadingPublished } = usePosts({ 
-    userId: isRealUser ? currentUser.id : undefined, 
+    userId: currentUser.id, 
     status: POST_STATUS.PUBLISHED 
   });
 
   // Fetch Drafts
   const { data: draftStories, isLoading: loadingDrafts } = usePosts({ 
-    userId: isRealUser ? currentUser.id : undefined, 
+    userId: currentUser.id, 
     status: POST_STATUS.DRAFT 
   });
+
+  const deleteMutation = useDeletePost();
+
+  const handleDeleteConfirm = () => {
+    if (!postToDelete) return;
+
+    deleteMutation.mutate(postToDelete.id, {
+      onSuccess: () => {
+        toast.success("Đã xóa bài viết thành công.");
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        setPostToDelete(null);
+      },
+      onError: () => {
+        toast.error("Xóa bài viết thất bại. Vui lòng thử lại.");
+        setPostToDelete(null);
+      }
+    });
+  };
 
   return (
     <div className="container max-w-5xl mx-auto animate-in fade-in duration-500">
@@ -60,7 +92,11 @@ export function Stories() {
           ) : publishedStories && publishedStories.length > 0 ? (
             <div className="space-y-4">
               {publishedStories.map((story: Post) => (
-                <StoryItem key={story.id} story={story} />
+                <StoryItem 
+                  key={story.id} 
+                  story={story} 
+                  onDeleteClick={() => setPostToDelete(story)} 
+                />
               ))}
             </div>
           ) : (
@@ -78,7 +114,11 @@ export function Stories() {
           ) : draftStories && draftStories.length > 0 ? (
             <div className="space-y-4">
               {draftStories.map((story: Post) => (
-                <StoryItem key={story.id} story={story} />
+                <StoryItem 
+                  key={story.id} 
+                  story={story} 
+                  onDeleteClick={() => setPostToDelete(story)}
+                />
               ))}
             </div>
           ) : (
@@ -86,20 +126,57 @@ export function Stories() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* --- CẬP NHẬT GIAO DIỆN ALERT --- */}
+      <AlertDialog open={!!postToDelete} onOpenChange={(open) => !open && setPostToDelete(null)}>
+        {/* Thêm bg-white, border, shadow để tạo nền trắng rõ ràng */}
+        <AlertDialogContent className="bg-white border border-gray-200 shadow-xl sm:max-w-[500px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600 text-xl">
+              <AlertTriangle className="h-6 w-6" />
+              Xóa bài viết?
+            </AlertDialogTitle>
+            
+            {/* Chỉnh màu chữ description đậm hơn một chút để dễ đọc trên nền trắng */}
+            <AlertDialogDescription className="text-base mt-3 text-gray-600 leading-relaxed">
+              Bạn có chắc chắn muốn xóa bài viết:
+              <br />
+              <span className="font-bold text-gray-900 block my-2 text-lg">
+                "{postToDelete?.title || 'Untitled'}"
+              </span>
+              Hành động này sẽ chuyển bài viết vào thùng rác và không thể hoàn tác ngay lập tức.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel 
+              disabled={deleteMutation.isPending}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-900 border-0"
+            >
+              Hủy bỏ
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm} 
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function StoryItem({ story }: { story: Post }) {
+function StoryItem({ story, onDeleteClick }: { story: Post, onDeleteClick: () => void }) {
   const navigate = useNavigate();
   const formattedDate = formatDate(story.datePublished || new Date().toISOString());
 
   return (
     <div 
       className={cn(
-        "flex gap-4 p-4 rounded-lg border border-theme",
-        "bg-[var(--story-item-bg)] hover:bg-[var(--hover-item-bg)]",
-        "backdrop-blur-sm transition-colors cursor-pointer"
+        "flex gap-4 p-4 rounded-lg border border-theme bg-[var(--story-item-bg)] hover:bg-[var(--hover-item-bg)] backdrop-blur-sm transition-colors cursor-pointer"
       )}
       onClick={() => navigate(`/editor?id=${story.id}`)}
     >
@@ -129,7 +206,12 @@ function StoryItem({ story }: { story: Post }) {
             <Button variant="outline" size="icon" onClick={(e) => e.stopPropagation()}><MoreVertical className="h-4 w-4" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem className="text-red-600"><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
+            <DropdownMenuItem 
+              className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); onDeleteClick(); }}
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
