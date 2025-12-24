@@ -4,6 +4,7 @@ import { Topbar } from './Topbar';
 import { Sidebar } from './Sidebar';
 import { useCurrentUser } from '@/features/auth/api/get-current-user';
 import { User } from '@/features/auth/types';
+import { CompleteProfileForm } from '@/features/auth/components/CompleteProfileForm';
 
 export const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -39,6 +40,11 @@ export const AppLayout = () => {
 
   if (isLoading) {
     return <div className="h-screen flex items-center justify-center">Loading application...</div>;
+  }
+
+  if (!user && window.localStorage.getItem("accessToken") != null) {
+    console.log(window.localStorage.getItem("accessToken"))
+    return <CompleteProfileForm />;
   }
 
   const defaultUser: User = {
