@@ -1,40 +1,29 @@
 import { apiClient } from '@/lib/api-client';
 
-// --- 1. ĐỊNH NGHĨA KIỂU DỮ LIỆU TỪ BACKEND (RAW) ---
-interface CommentUserResponse {
-    id: string;
-    username: string;
-    display_name?: string;
-    avatar_url?: string;
-}
-
+// Interface trả về từ Backend
 interface CommentResponse {
     id: string | number;
     postId: number;
-    post_id?: number;
     parentId: string | null;
-    parent_id?: string | null;
     content: string;
-    user: CommentUserResponse;
+    
+    // Backend trả về object user lồng nhau (hoặc null)
+    user?: {
+        id: string;
+        username: string;
+        avatarUrl: string | null;
+        displayName?: string;
+    };
+    
+    // Fallback ID
+    userId?: string;
+    
     likeCount: number;
-    like_count?: number;
     replyCount: number;
-    reply_count?: number;
     isLiked: boolean;
-    is_liked?: boolean;
     createdAt: string;
-    created_at?: string;
     updatedAt: string;
-    updated_at?: string;
     replies?: CommentResponse[];
-}
-
-// --- 2. ĐỊNH NGHĨA KIỂU DỮ LIỆU FRONTEND SỬ DỤNG ---
-export interface CommentUser {
-    id: string;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
 }
 
 export interface Comment {
@@ -42,102 +31,85 @@ export interface Comment {
     postId: number;
     parentId: string | null;
     content: string;
-    user: CommentUser;
+    userId: string;
+    fallbackUser: {
+        username: string;
+        displayName: string;
+        avatarUrl: string | null;
+    };
     likeCount: number;
     replyCount: number;
     isLiked: boolean;
     createdAt: string;
     updatedAt: string;
-    replies?: Comment[]; 
+    replies: Comment[]; 
 }
 
 export interface CommentListResponse {
     data: Comment[];
-    meta: {
-        nextCursor: string | null;
-        limit: number;
-    };
+    meta: any;
 }
 
 export interface CreateCommentDTO {
     postId: number;
     content: string;
-    parentId?: string; // Optional
+    parentId?: string;
 }
 
-// --- 3. HÀM MAP DỮ LIỆU ---
+// --- HÀM MAP DỮ LIỆU ---
 const mapCommentResponse = (data: CommentResponse): Comment => {
-    const rawUser = data.user || {};
-    const user: CommentUser = {
-        id: rawUser.id,
-        username: rawUser.username || 'unknown',
-        displayName: rawUser.display_name || rawUser.username || 'Unknown',
-        avatarUrl: rawUser.avatar_url || null, 
-    };
+    // [FIX] Sửa lỗi TypeScript: Dùng optional chaining (?.) thay vì || {}
+    // data.user?.id sẽ trả về undefined nếu data.user không tồn tại, code sẽ chạy tiếp sang ||
+    const userId = data.user?.id || data.userId || '';
 
     return {
         id: String(data.id),
-        postId: Number(data.postId || data.post_id),
-        parentId: data.parentId || data.parent_id || null,
+        postId: Number(data.postId),
+        parentId: data.parentId || null,
         content: data.content,
-        user: user,
-        likeCount: data.likeCount || data.like_count || 0,
-        replyCount: data.replyCount || data.reply_count || 0,
-        isLiked: data.isLiked || data.is_liked || false,
-        createdAt: data.createdAt || data.created_at || new Date().toISOString(),
-        updatedAt: data.updatedAt || data.updated_at || new Date().toISOString(),
+        
+        // userId chuẩn để hook useUser gọi lại
+        userId: String(userId),
+        
+        // [FIX] Sửa lỗi truy cập property trên object rỗng
+        fallbackUser: {
+            username: data.user?.username || 'unknown',
+            displayName: data.user?.displayName || data.user?.username || 'Unknown',
+            avatarUrl: data.user?.avatarUrl || null,
+        },
+        
+        likeCount: data.likeCount || 0,
+        replyCount: data.replyCount || 0,
+        isLiked: data.isLiked || false,
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString(),
         replies: data.replies?.map(mapCommentResponse) || []
     };
 };
 
-// --- 4. CÁC HÀM GỌI API ---
-
-// 1. Get root comments
 export const getComments = async (postId: string, cursor?: string): Promise<CommentListResponse> => {
-    // [FIX] Thêm 'as any' để TypeScript biết đây là dữ liệu thô đã qua interceptor
     const response = await apiClient.get(`/posts/${postId}/comments`, {
         params: { cursor, limit: 10 }
     }) as any;
-
     const rawData = response.data || (Array.isArray(response) ? response : []);
-    const meta = response.meta || { nextCursor: null, limit: 10 };
-
     return {
         data: Array.isArray(rawData) ? rawData.map(mapCommentResponse) : [],
-        meta
+        meta: response.meta || {}
     };
 };
 
-// 2. Get replies of a comment
 export const getReplies = async (commentId: string, cursor?: string): Promise<CommentListResponse> => {
-    // [FIX] Thêm 'as any'
     const response = await apiClient.get(`/comments/${commentId}/replies`, {
         params: { cursor, limit: 5 }
     }) as any;
-
     const rawData = response.data || (Array.isArray(response) ? response : []);
-    const meta = response.meta || { nextCursor: null, limit: 5 };
-
     return {
         data: Array.isArray(rawData) ? rawData.map(mapCommentResponse) : [],
-        meta
+        meta: response.meta || {}
     };
 };
 
-// 3. Create comment/reply
 export const createComment = async (data: CreateCommentDTO): Promise<Comment> => {
-    // [FIX] Thêm 'as any' hoặc cast đúng kiểu Response
     const response = await apiClient.post('/comments', data) as any;
     return mapCommentResponse(response);
-};
-
-// 4. Update comment
-export const updateComment = async (commentId: string, content: string): Promise<Comment> => {
-    const response = await apiClient.put(`/comments/${commentId}`, { content }) as any;
-    return mapCommentResponse(response);
-};
-
-// 5. Delete comment
-export const deleteComment = async (commentId: string): Promise<void> => {
-    return apiClient.delete(`/comments/${commentId}`);
 };

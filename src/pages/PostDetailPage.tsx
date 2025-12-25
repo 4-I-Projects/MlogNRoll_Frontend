@@ -40,14 +40,20 @@ export function PostDetailPage({ currentUser }: PostDetailPageProps) {
     enabled: !!safePostId,
   });
 
-  // [MỚI] Effect tự động đổi theme theo mood của bài viết
+  // [FIX] Effect tự động đổi theme theo mood của bài viết
   useEffect(() => {
-    if (post) {
-      // Nếu post có mood thì set, nếu không (null/undefined) thì về 'happy'
-      setThemeId(post.mood || 'happy');
+    if (post && post.mood) {
+      // [QUAN TRỌNG] Chuyển về chữ thường để khớp với key trong theme config
+      // Ví dụ: Backend trả "Angry" -> Frontend cần "angry"
+      const moodKey = post.mood.toLowerCase();
+      setThemeId(moodKey);
+    } else {
+      // Fallback về happy nếu không có mood
+      setThemeId('happy');
     }
-    // Optional: Bạn có thể thêm cleanup function để reset theme khi rời trang nếu muốn
-    // return () => setThemeId('happy');
+    
+    // Cleanup: Reset về theme mặc định khi rời khỏi trang bài viết
+    return () => setThemeId('happy');
   }, [post, setThemeId]);
 
   // Build Tree Comments

@@ -15,13 +15,8 @@ export const mapUserFromBE = (data: any): User => {
     ...data,
     firstName: firstName,
     lastName: lastName,
-    // Ưu tiên displayName ghép từ họ tên, nếu không có thì dùng username
     displayName: fullName || data.username || 'Unknown User',
-    
-    // Avatar placeholder nếu BE trả về null
     avatar: data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || data.username)}&background=random&color=fff`,
-    
-    // Bio mặc định
     bio: data.bio || `Thành viên của Mlog.`,
   };
 };
