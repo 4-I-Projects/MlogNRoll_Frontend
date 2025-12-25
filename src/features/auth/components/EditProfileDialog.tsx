@@ -38,7 +38,6 @@ export const EditProfileDialog = ({ user, trigger }: EditProfileDialogProps) => 
     onSuccess: () => {
       toast.success('Cập nhật hồ sơ thành công!');
       
-      // Cập nhật Cache thủ công để UI đổi ngay lập tức (Optional nhưng recommended)
       queryClient.setQueryData(['current-user'], (oldData: User | undefined) => {
         if (!oldData) return undefined;
         return {
@@ -101,18 +100,20 @@ export const EditProfileDialog = ({ user, trigger }: EditProfileDialogProps) => 
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      
+      {/* [FIX] Thêm bg-white, text-gray-900 để đảm bảo nền trắng chữ đen dễ đọc */}
+      <DialogContent className="sm:max-w-[425px] bg-white text-gray-900 border-gray-200 shadow-xl">
         <DialogHeader>
-          <DialogTitle>Chỉnh sửa hồ sơ</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-gray-900">Chỉnh sửa hồ sơ</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="grid gap-6 py-4">
           
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
-                <Avatar className="h-24 w-24 border-2 border-border shadow-sm">
+                <Avatar className="h-24 w-24 border-2 border-gray-200 shadow-sm">
                     <AvatarImage src={formData.avatar_url} className="object-cover" />
-                    <AvatarFallback className="text-2xl font-bold">
+                    <AvatarFallback className="text-2xl font-bold bg-gray-100 text-gray-600">
                         {formData.display_name?.charAt(0) || user.username.charAt(0)}
                     </AvatarFallback>
                 </Avatar>
@@ -143,7 +144,8 @@ export const EditProfileDialog = ({ user, trigger }: EditProfileDialogProps) => 
                 size="sm" 
                 onClick={handleTriggerUpload}
                 disabled={isUploading}
-                className="gap-2"
+                // [FIX] Nút upload rõ ràng hơn trên nền trắng
+                className="gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
             >
                 {isUploading ? 'Uploading...' : (
                     <>
@@ -154,39 +156,43 @@ export const EditProfileDialog = ({ user, trigger }: EditProfileDialogProps) => 
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="display_name">Tên hiển thị</Label>
+            <Label htmlFor="display_name" className="text-gray-700 font-medium">Tên hiển thị</Label>
             <Input
               id="display_name"
               value={formData.display_name}
               onChange={(e) => setFormData({...formData, display_name: e.target.value})}
-              // [FIX] Thêm màu chữ tối và nền trắng
-              className="text-gray-900 bg-white border-gray-300 focus:border-primary"
+              // [FIX] Style input chuẩn nền trắng, viền xám
+              className="bg-white text-gray-900 border-gray-300 focus:border-black focus:ring-1 focus:ring-black placeholder:text-gray-400"
             />
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="username" className="text-gray-700 font-medium">Username</Label>
             <Input
               id="username"
               value={formData.username}
               onChange={(e) => setFormData({...formData, username: e.target.value})}
-              // [FIX] Thêm màu chữ tối và nền trắng
-              className="text-gray-900 bg-white border-gray-300 focus:border-primary"
+              // [FIX] Style input chuẩn nền trắng, viền xám
+              className="bg-white text-gray-900 border-gray-300 focus:border-black focus:ring-1 focus:ring-black placeholder:text-gray-400"
             />
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="bio">Bio</Label>
+            <Label htmlFor="bio" className="text-gray-700 font-medium">Bio</Label>
             <Textarea
               id="bio"
               value={formData.bio}
               onChange={(e) => setFormData({...formData, bio: e.target.value})}
-              // [FIX] Thêm màu chữ tối và nền trắng
-              className="resize-none min-h-[80px] text-gray-900 bg-white border-gray-300 focus:border-primary"
+              // [FIX] Style textarea chuẩn nền trắng, viền xám
+              className="resize-none min-h-[80px] bg-white text-gray-900 border-gray-300 focus:border-black focus:ring-1 focus:ring-black placeholder:text-gray-400"
             />
           </div>
 
-          <Button type="submit" disabled={mutation.isPending || isUploading}>
+          <Button 
+            type="submit" 
+            disabled={mutation.isPending || isUploading}
+            className="bg-black text-white hover:bg-gray-800 font-medium"
+          >
             {(mutation.isPending || isUploading) ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
             ) : 'Lưu thay đổi'}

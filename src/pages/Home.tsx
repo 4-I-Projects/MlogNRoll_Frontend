@@ -38,7 +38,8 @@ export function Home() {
   }
 
   if (error) {
-    return <div className="text-center py-20 text-red-500">Failed to load stories.</div>;
+    // return <div className="text-center py-20 text-red-500">Failed to load stories.</div>;
+    return <div className="text-center py-20 text-red-500">Login to get posts</div>;
   }
 
   if (!posts || posts.length === 0) {

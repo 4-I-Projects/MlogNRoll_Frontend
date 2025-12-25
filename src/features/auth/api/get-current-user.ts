@@ -2,19 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { User } from '../types';
 
-// 1. Định nghĩa kiểu dữ liệu thô trả về từ Backend (khớp 100% với JSON Response)
+// 1. Định nghĩa kiểu dữ liệu thô trả về từ Backend
 interface UserResponse {
   id: string;
   username: string;
   email: string;
   first_name?: string;
   last_name?: string;
-  display_name?: string; // Backend trả về snake_case
+  display_name?: string; 
   bio?: string;
-  avatar_url?: string;   // Backend trả về snake_case
+  avatar_url?: string;   
   created_at?: string;
   updated_at?: string;
-  followers_count?: number; // Dự phòng nếu backend trả về snake_case
+  followers_count?: number; 
   following_count?: number;
   is_following?: boolean;
 }
@@ -27,16 +27,9 @@ const mapUserResponse = (data: UserResponse): User => {
     email: data.email,
     firstName: data.first_name || '',
     lastName: data.last_name || '',
-    
-    // [FIX 1] Map đúng key display_name -> displayName
     displayName: data.display_name || data.username, 
-    
-    // [FIX 2 - QUAN TRỌNG] Map avatar_url từ backend sang avatar của frontend
     avatar: data.avatar_url || '', 
-    
     bio: data.bio || '',
-    
-    // Map các chỉ số (nếu backend chưa trả về thì để 0)
     followersCount: data.followers_count || 0,
     followingCount: data.following_count || 0,
     isFollowing: data.is_following || false,
@@ -47,16 +40,33 @@ export const getCurrentUser = async (): Promise<User> => {
   // Gọi API
   const response = await apiClient.get('/users/me');
   
-  // [FIX 3] Map dữ liệu trước khi trả về cho Hook
-  // Ép kiểu response về UserResponse để TypeScript hiểu cấu trúc snake_case
+  // Map dữ liệu trước khi trả về cho Hook
   return mapUserResponse(response as unknown as UserResponse);
 };
 
 export const useCurrentUser = () => {
   return useQuery({
-    // [FIX 4] Đổi key thành ['current-user'] để khớp với EditProfileDialog
     queryKey: ['current-user'], 
     queryFn: getCurrentUser,
-    retry: false,
+    
+    // [FIX QUAN TRỌNG: Cấu hình Retry để xử lý Race Condition]
+    // Khi vừa login xong, Backend có thể chưa kịp sync user -> API trả về 404
+    // Ta cấu hình retry để đợi một chút thay vì lỗi ngay lập tức.
+    retry: (failureCount, error: any) => {
+      // 1. Nếu lỗi 401 (Unauthorized - Token sai/hết hạn) -> Dừng ngay (để app logout)
+      if (error?.response?.status === 401) return false;
+      
+      // 2. Nếu lỗi khác (thường là 404 Not Found do chưa sync kịp), thử lại tối đa 3 lần
+      if (failureCount < 3) return true;
+      
+      // 3. Quá 3 lần vẫn lỗi -> Dừng (lúc này AppLayout sẽ hiện form hoàn tất profile)
+      return false; 
+    },
+    
+    // [FIX] Đợi 1000ms (1 giây) giữa các lần thử lại
+    retryDelay: 1000, 
+    
+    // Tắt refetch khi focus để tránh spam request trong lúc đang retry
+    refetchOnWindowFocus: false,
   });
 };
