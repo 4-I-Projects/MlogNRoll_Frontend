@@ -29,6 +29,7 @@ export function Home() {
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
+              
               <Skeleton className="h-28 w-28 flex-shrink-0" />
             </div>
           </div>
